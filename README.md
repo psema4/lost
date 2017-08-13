@@ -20,3 +20,11 @@ To build the game, run the mkdist.sh shell command; it takes an optional --serve
 ## Credits & Attributions
 
 This entry is heavily inspired by Maxime Euzière's CSS3D article at http://xem.github.io/articles/#css3d
+
+The skybox starfield is inspired by https://codepen.io/iblamefish/pen/xgefG
+
+## Todo & Known Issues
+
+- Find a tool to minify html and css
+- Uglify-js doesn't like template strings, check version
+- 

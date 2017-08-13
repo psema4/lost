@@ -18,6 +18,15 @@
 }
 
 /* skybox */
+#canvas {
+    display: none;
+    position: absolute;
+    top: -2000px;
+    left: -2000px;
+    width: 1000px;
+    height: 1000px;
+}
+
 #sb0, #sb1, #sb2,
 #sb3, #sb4, #sb5 {
     position: absolute;
