@@ -7,13 +7,18 @@
     </head>
 
     <body>
-        <div id=viewport>
-            <div id=camera>
-                <div id=scene>
-                    <div id=sprite1>js13k</div>
+        <div id="viewport">
+            <div id="camera">
+                <div id="scene">
+                    <div id="sprite1">js13k</div>
                 </div>
             </div>
         </div>
 
-        <script src=game.js></script>
+        <h2>Camera</h2>
+        Y: <input type="range" value="0" min="0" max="360" step="1" onchange="rotCamY(this.value);" /> <span id="cam_rotY">0&deg;</span>
+        <br/>
+        X: <input type="range" value="90" min="0" max="360" step="1" onchange="rotCamX(this.value);" /> <span id="cam_rotX">90&deg;</span>
+
+        <script src=main.js></script>
     </body>
