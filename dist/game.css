@@ -1,0 +1,35 @@
+/* Based on and heavily inspired by http://xem.github.io/articles/#css3d */
+
+/* scene setup */
+* { transform-style: preserve-3d; box-sizing: border-box; }
+#viewport { width: 600px; height: 400px; overflow: hidden; perspective: 400px; background-color: #6af; } /* sky blue to fake skybox */
+#camera { width: 0px; height: 0px; position: relative; left: 300px; top: 200px; }
+#scene { width: 4000px; height: 4000px; transform-origin: 0 0; position: relative; background-color: #ccc; } /* dull gray for our ground */
+
+/* position the view */
+#scene {
+    transform:
+        translateX(-2000px)     /* move the scene to the center of the camera viewport */
+        rotateX(90deg)          /* rotate the scene lay it out flat, this is our ground plane  */
+        translateY(-3600px)     /* move the bottom of the scene div into view  */
+        translateZ(-96px);      /* push scene down to simulate camera height above our ground */
+}
+
+/* add sprites */
+#sprite1 {
+    position: absolute;
+    top: 3500px;
+    left: 2000px;
+    width: 64px;
+    height: 64px;
+    background-color: #f00;
+    color: #fff;
+    text-align: center;
+    font-size: 18px;
+    line-height: 64px;
+    transform:
+        translateX(-32px)       /* offset 1/2 sprite-width to center it on the x coordinate */
+        rotateX(-90deg)         /* make it perpendicular to the scene div (ground plane) */
+        translateY(-32px)       /* offset 1/2 sprite-height (place on the ground instead of splitting it) */
+        rotateY(25deg);         /* rotate the sprite a little for effect */
+}
