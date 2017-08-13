@@ -4,7 +4,7 @@
 * { transform-style: preserve-3d; box-sizing: border-box; }
 #viewport { width: 600px; height: 400px; overflow: hidden; perspective: 400px; }
 #camera { width: 0px; height: 0px; position: relative; left: 300px; top: 200px; }
-#scene { width: 4000px; height: 4000px; transform-origin: 0 0; position: relative; background-color: rgba(227,227,227,0); } /* invisible ground plane */
+#scene { width: 4000px; height: 4000px; transform-origin: 0 0; position: relative; background-color: rgba(227,227,227,0); transition: transform 1s } /* invisible ground plane */
 
 /* position the view */
 #scene {
