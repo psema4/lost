@@ -1,3 +1,5 @@
+running = false;
+
 camera = {
     rotX: 90
   , rotY: 0
@@ -6,7 +8,24 @@ camera = {
 window.addEventListener('load', function() {
     console.log('load');
     createSkybox();
+    updateCamera();
+    if (running) gameLoop();
 });
+
+function gameLoop() {
+    var y = parseInt(sprite1.style.top) || 0;
+
+    if (y > 4000) {
+        y = 0;
+        sprite1.style.left = Math.round(Math.random() * 4000) + 'px';
+        var altitude = Math.round(Math.random() * 2000) - 1000 + 'px';
+        sprite1.style.transform = 'translateX(-32px) rotateX(-90deg) translateY(' + altitude + ')';
+    }
+
+    sprite1.style.top = y + 1 + 'px';
+
+    if (running) requestAnimationFrame(gameLoop);
+}
 
 function createSkybox() {
     var divs = [];
