@@ -4,7 +4,8 @@ A js13k entry. http://2017.js13kgames.com
 
 ## Playing
 
-TBD
+- Browse to https://psema4.github.io/lost/
+- TBD
 
 ## Building
 
