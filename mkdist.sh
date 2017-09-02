@@ -2,8 +2,6 @@
 
 echo "copying files"
 cp src/index.min.html dist/index.html
-echo "WARN: copying aframe.min.js: DO NOT SUBMIT, USE CDN"
-cp src/aframe.min.js dist/aframe.min.js
 cp src/game.css dist/game.css #FIXME: minify css
 cat src/main.js > src/game.js
 
