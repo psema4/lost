@@ -4,7 +4,9 @@ STATE_AGITATED = 1
 function Actor(opts) {
     opts = opts || {};
 
-    var name = opts.name || 'ACTOR'
+    var prng = opts.prng || new MSWS()
+      , seed = opts.seed || new Date().getTime()
+      , name = opts.name || 'ACTOR'
       , glyph = 'a'
       , layer = opts.layer || 0
       , id = opts.id || 0
@@ -13,7 +15,11 @@ function Actor(opts) {
       , state = opts.state || STATE_NORMAL
     ;
 
+    if (id == 0) glyph = '@';
+
     function agitate() {
+        if (this.id ==0) return;
+
         this.state = STATE_AGITATED;
         this.glyph = 'A';
         engine.layers[layer].map[y][x] = this.glyph;
@@ -21,6 +27,8 @@ function Actor(opts) {
     }
 
     function calm() {
+        if (this.id ==0) return;
+
         this.state = STATE_NORMAL;
         this.glyph = 'a';
         engine.layers[layer].map[y][x] = this.glyph;
@@ -56,6 +64,17 @@ function Actor(opts) {
         return true;
     }
 
+    function getName(id) {
+        var names = [ 'Player', 'Actor1', 'Actor2', 'Actor3', 'Actor4', 'Actor5', 'Actor6', 'Actor7' ];
+
+        if (id < names.length) {
+            return names[id];
+
+        } else {
+            return 'Extra Actor';
+        }
+    }
+
     return {
         name: name
       , glyph: glyph
@@ -67,5 +86,6 @@ function Actor(opts) {
       , agitate: agitate
       , calm: calm
       , move: move
+      , getName: getName
     }
 }

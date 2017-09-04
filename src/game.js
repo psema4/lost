@@ -113,7 +113,9 @@ STATE_AGITATED = 1
 function Actor(opts) {
     opts = opts || {};
 
-    var name = opts.name || 'ACTOR'
+    var prng = opts.prng || new MSWS()
+      , seed = opts.seed || new Date().getTime()
+      , name = opts.name || 'ACTOR'
       , glyph = 'a'
       , layer = opts.layer || 0
       , id = opts.id || 0
@@ -122,7 +124,11 @@ function Actor(opts) {
       , state = opts.state || STATE_NORMAL
     ;
 
+    if (id == 0) glyph = '@';
+
     function agitate() {
+        if (this.id ==0) return;
+
         this.state = STATE_AGITATED;
         this.glyph = 'A';
         engine.layers[layer].map[y][x] = this.glyph;
@@ -130,6 +136,8 @@ function Actor(opts) {
     }
 
     function calm() {
+        if (this.id ==0) return;
+
         this.state = STATE_NORMAL;
         this.glyph = 'a';
         engine.layers[layer].map[y][x] = this.glyph;
@@ -165,6 +173,17 @@ function Actor(opts) {
         return true;
     }
 
+    function getName(id) {
+        var names = [ 'Player', 'Actor1', 'Actor2', 'Actor3', 'Actor4', 'Actor5', 'Actor6', 'Actor7' ];
+
+        if (id < names.length) {
+            return names[id];
+
+        } else {
+            return 'Extra Actor';
+        }
+    }
+
     return {
         name: name
       , glyph: glyph
@@ -176,6 +195,7 @@ function Actor(opts) {
       , agitate: agitate
       , calm: calm
       , move: move
+      , getName: getName
     }
 }
 STATE_NORMAL = 0
@@ -183,7 +203,9 @@ STATE_NORMAL = 0
 function Pickup(opts) {
     opts = opts || {};
 
-    var name = opts.name || 'PICKUP'
+    var prng = opts.prng || new MSWS()
+      , seed = opts.seed || new Date().getTime()
+      , name = opts.name || 'PICKUP'
       , glyph = 'p'
       , layer = opts.layer || 0
       , id = opts.id || 0
@@ -191,6 +213,28 @@ function Pickup(opts) {
       , y = opts.y || 0
       , state = opts.state || STATE_NORMAL
     ;
+
+    function getName(id) {
+        var names = [ 'Potion', 'Scroll', 'Sword', 'Gold' ]
+          , chance = prng.getInt(100, 1) - 1
+          , selected
+        ;
+
+        if (chance < 35) {
+            selected = 0;
+
+        } else if (chance < 70) {
+            selected = 1;
+
+        } else if (chance < 90) {
+            selected = 2;
+
+        } else {
+            selected = 3;
+        }
+
+        return names[selected];
+    }
 
     return {
         name: name
@@ -200,6 +244,7 @@ function Pickup(opts) {
       , x: x
       , y: y
       , state: state
+      , getName: getName
     }
 }
 function Layer(opts) {
@@ -285,7 +330,9 @@ function Layer(opts) {
                     y = prng.getInt(height-1, 0);
 
                     if (floorsAndWalls[y][x] != '#') {
-                        things[t] = new thing({ layer: this.id, id: t, x: x, y: y });
+                        things[t] = new thing({ layer: this.id, id: t, x: x, y: y, prng: prng, seed: seed });
+                        var name = things[t].getName(t);
+                        things[t].name = name;
                         pending = false;
 
                         map[y][x] = things[t].glyph || '?';
@@ -368,10 +415,20 @@ function Layer(opts) {
     on the door to the right should cause the engine to generate a new map with the seed 1001.
 */
 
+
 DEBUG = true;
+
 LYR_FLOORSWALLS = 0;
 LYR_PICKUPS = 1;
 LYR_ACTORS = 2;
+
+// alias Z to W, Q to A for AZERTY keyboards; see http://xem.github.io/articles/#jsgamesinputs
+KEY_W = 87; KEY_Z = 90; KEY_UP = 38;
+KEY_A = 65; KEY_Q = 81; KEY_LEFT = 37;
+KEY_S = 83; KEY_DOWN = 40;
+KEY_D = 68; KEY_RIGHT =  39;
+KEY_SPACE = 32;
+KEY_ENTER = 13;
 
 function Engine(opts) {
     opts = opts || {};
@@ -404,6 +461,66 @@ function Engine(opts) {
     layers.push(new Layer({ id: LYR_ACTORS, W: width, H: height, N: numActors, T: Actor, prng: prng, seed: seed }));
     layers[LYR_ACTORS].generate(layers[LYR_FLOORSWALLS].map);
     actors = layers[LYR_ACTORS].things;
+
+
+    // handle inputs
+    window.addEventListener('keydown', function(e) {
+        switch (e.which) {
+            case KEY_W:
+            case KEY_Z:
+            case KEY_UP:
+                actors[0].move(0, -1);
+                render();
+                break;
+
+            case KEY_A:
+            case KEY_Q:
+            case KEY_LEFT:
+                actors[0].move(-1, 0);
+                render();
+                break;
+
+            case KEY_S:
+            case KEY_DOWN:
+                actors[0].move(0, 1);
+                render();
+                break;
+
+            case KEY_D:
+            case KEY_RIGHT:
+                actors[0].move(1, 0);
+                render();
+                break;
+
+            case KEY_SPACE:
+                console.log('space');
+                break;
+
+            case KEY_ENTER:
+                console.log('enter');
+                break;
+
+            default:
+        }
+
+        aiTurn();
+    });
+
+    function aiTurn() {
+        // process all non-player actors
+        for (var id=1; id<actors.length; id++) {
+            var d = prng.getInt(4, 1);
+            
+            if (d == 0) actors[id].move(0, -1);
+            if (d == 1) actors[id].move(-1, 0);
+            if (d == 2) actors[id].move(0, 1);
+            if (d == 3) actors[id].move(1, 0);
+
+            if (DEBUG) console.log('actor[%s] move direction: %s', id, d);
+        }
+
+        render();
+    }
 
     // combine layers (raw render)
     function mergeLayers() {
@@ -451,6 +568,8 @@ function Engine(opts) {
             console.log(buf);
             console.groupEnd();
         }
+
+        stage.innerText = buf;
 
         return buf;
     }

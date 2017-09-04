@@ -39,10 +39,20 @@
     on the door to the right should cause the engine to generate a new map with the seed 1001.
 */
 
+
 DEBUG = true;
+
 LYR_FLOORSWALLS = 0;
 LYR_PICKUPS = 1;
 LYR_ACTORS = 2;
+
+// alias Z to W, Q to A for AZERTY keyboards; see http://xem.github.io/articles/#jsgamesinputs
+KEY_W = 87; KEY_Z = 90; KEY_UP = 38;
+KEY_A = 65; KEY_Q = 81; KEY_LEFT = 37;
+KEY_S = 83; KEY_DOWN = 40;
+KEY_D = 68; KEY_RIGHT =  39;
+KEY_SPACE = 32;
+KEY_ENTER = 13;
 
 function Engine(opts) {
     opts = opts || {};
@@ -75,6 +85,66 @@ function Engine(opts) {
     layers.push(new Layer({ id: LYR_ACTORS, W: width, H: height, N: numActors, T: Actor, prng: prng, seed: seed }));
     layers[LYR_ACTORS].generate(layers[LYR_FLOORSWALLS].map);
     actors = layers[LYR_ACTORS].things;
+
+
+    // handle inputs
+    window.addEventListener('keydown', function(e) {
+        switch (e.which) {
+            case KEY_W:
+            case KEY_Z:
+            case KEY_UP:
+                actors[0].move(0, -1);
+                render();
+                break;
+
+            case KEY_A:
+            case KEY_Q:
+            case KEY_LEFT:
+                actors[0].move(-1, 0);
+                render();
+                break;
+
+            case KEY_S:
+            case KEY_DOWN:
+                actors[0].move(0, 1);
+                render();
+                break;
+
+            case KEY_D:
+            case KEY_RIGHT:
+                actors[0].move(1, 0);
+                render();
+                break;
+
+            case KEY_SPACE:
+                console.log('space');
+                break;
+
+            case KEY_ENTER:
+                console.log('enter');
+                break;
+
+            default:
+        }
+
+        aiTurn();
+    });
+
+    function aiTurn() {
+        // process all non-player actors
+        for (var id=1; id<actors.length; id++) {
+            var d = prng.getInt(4, 1);
+            
+            if (d == 0) actors[id].move(0, -1);
+            if (d == 1) actors[id].move(-1, 0);
+            if (d == 2) actors[id].move(0, 1);
+            if (d == 3) actors[id].move(1, 0);
+
+            if (DEBUG) console.log('actor[%s] move direction: %s', id, d);
+        }
+
+        render();
+    }
 
     // combine layers (raw render)
     function mergeLayers() {
@@ -122,6 +192,8 @@ function Engine(opts) {
             console.log(buf);
             console.groupEnd();
         }
+
+        stage.innerText = buf;
 
         return buf;
     }

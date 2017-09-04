@@ -81,7 +81,9 @@ function Layer(opts) {
                     y = prng.getInt(height-1, 0);
 
                     if (floorsAndWalls[y][x] != '#') {
-                        things[t] = new thing({ layer: this.id, id: t, x: x, y: y });
+                        things[t] = new thing({ layer: this.id, id: t, x: x, y: y, prng: prng, seed: seed });
+                        var name = things[t].getName(t);
+                        things[t].name = name;
                         pending = false;
 
                         map[y][x] = things[t].glyph || '?';
