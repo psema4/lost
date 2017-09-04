@@ -124,7 +124,14 @@ function Actor(opts) {
       , state = opts.state || STATE_NORMAL
     ;
 
-    if (id == 0) glyph = '@';
+    if (id == 0) {
+        glyph = '@';
+        hp = 3;
+
+    } else {
+        hp = prng.getInt(3, 1);
+    }
+    
 
     function agitate() {
         if (this.id ==0) return;
@@ -464,7 +471,7 @@ function Engine(opts) {
 
 
     // handle inputs
-    window.addEventListener('keydown', function(e) {
+    function handleInputs(e) {
         switch (e.which) {
             case KEY_W:
             case KEY_Z:
@@ -504,12 +511,13 @@ function Engine(opts) {
         }
 
         aiTurn();
-    });
+    }
+    window.addEventListener('keydown', handleInputs);
 
     function aiTurn() {
         // process all non-player actors
         for (var id=1; id<actors.length; id++) {
-            var d = prng.getInt(4, 1);
+            var d = prng.getInt(4, 1) - 1;
             
             if (d == 0) actors[id].move(0, -1);
             if (d == 1) actors[id].move(-1, 0);
@@ -585,17 +593,25 @@ function Engine(opts) {
 
         // methods
       , render: render
+      , handleInputs: handleInputs
     }
 }
 window.addEventListener('load', function() {
     window.engine = new Engine({
         W: 20
-      , H: 20
+      , H: 10
       , A: 10
       , P: 3
       , debug: false
       , seed: 4242
     });
 
-    console.log(engine.render());
+    function $(sel) { return document.querySelector(sel); }
+
+    $('#btn_up').addEventListener('click', function() { engine.handleInputs({ which: 87 }); });
+    $('#btn_lt').addEventListener('click', function() { engine.handleInputs({ which: 65 }); });
+    $('#btn_dn').addEventListener('click', function() { engine.handleInputs({ which: 83 }); });
+    $('#btn_rt').addEventListener('click', function() { engine.handleInputs({ which: 68 }); });
+
+    engine.render();
 });

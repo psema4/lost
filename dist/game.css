@@ -1,1 +1,83 @@
-#stage { display: inline-block; width: 24em; height: 24em; border: 1px solid #eee; text-align: center; }
+body {
+    font: 24px Helvetica;
+    background: #000;
+}
+
+#main {
+    min-height: 400px;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-flow: row;
+}
+ 
+#main > article {
+    margin: 4px;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 7pt;
+    background: #ccc;
+    text-align: center;
+    flex: 3 1 60%;
+    order: 2;
+}
+
+#main > nav {
+    margin: 4px;
+    padding: 5px;
+    border: 1px solid #000;
+    border-radius: 7pt;
+    background: #000;
+    color: #eee;
+    text-align: center;
+    flex: 1 6 20%;
+    order: 1;
+}
+  
+#main > aside {
+    margin: 4px;
+    padding: 5px;
+    border: 1px solid #000;
+    border-radius: 7pt;
+    background: #000;
+    color: #eee;
+    flex: 1 6 20%;
+    order: 3;
+}
+ 
+header, footer {
+    display: block;
+    margin: 4px;
+    padding: 5px;
+    min-height: 100px;
+    background: #000;
+    color: #eee;
+    text-align: center;
+}
+
+footer {
+    font-size: 10px;
+}
+
+button {
+    display: inline-block;
+    width: 3em;
+    height: 2em;
+}
+ 
+/* Too narrow to support three columns */
+@media all and (max-width: 640px) {
+    #main, #page {
+        flex-direction: column;
+    }
+
+    #main > article, #main > nav, #main > aside {
+    /* Return them to document order */
+        order: 0;
+    }
+  
+    #main > nav, #main > aside, header, footer {
+        min-height: 50px;
+        max-height: 50px;
+    }
+}

@@ -2,12 +2,38 @@
 <html lang=en>
     <head>
         <meta charset=utf8 />
+        <meta name=viewport content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+        <meta name=cache-control content="max-age=-1">
+
         <title>Lost</title>
         <link rel=stylesheet href=game.css />
     </head>
 
     <body>
-        <tt><pre id=stage></pre></tt>
+        <header>
+            Lost<br/>
+            <span id=message><span>
+        </header>
+
+        <div id='main'>
+            <article>
+                <tt><pre id=stage></pre></tt>
+            </article>
+
+            <nav>
+                <button id=btn_up>Up</button><br/>
+                <button id=btn_lt>Lt</button> <button id=btn_dn>Dn</button> <button id=btn_rt>Rt</button>
+            </nav>
+
+            <aside>
+                HP: <span id=hp>3</span><br/>
+                Scrolls: <span id=scrolls>0</span>
+            </aside>
+        </div>
+
+        <footer>&copy; 2017 Scott Elcomb <a href="http://creativecommons.org/">CC-BY-SA</a><br/>a <a href="http://js13kgames.com">JS13K</a> 2017 entry</footer>
+
+
         <script src=msws.js></script>
         <script src=engine/pickup.js></script>
         <script src=engine/actor.js></script>

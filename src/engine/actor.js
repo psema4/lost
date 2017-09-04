@@ -15,7 +15,14 @@ function Actor(opts) {
       , state = opts.state || STATE_NORMAL
     ;
 
-    if (id == 0) glyph = '@';
+    if (id == 0) {
+        glyph = '@';
+        hp = 3;
+
+    } else {
+        hp = prng.getInt(3, 1);
+    }
+    
 
     function agitate() {
         if (this.id ==0) return;

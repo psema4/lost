@@ -88,7 +88,7 @@ function Engine(opts) {
 
 
     // handle inputs
-    window.addEventListener('keydown', function(e) {
+    function handleInputs(e) {
         switch (e.which) {
             case KEY_W:
             case KEY_Z:
@@ -128,7 +128,8 @@ function Engine(opts) {
         }
 
         aiTurn();
-    });
+    }
+    window.addEventListener('keydown', handleInputs);
 
     function aiTurn() {
         // process all non-player actors
@@ -209,5 +210,6 @@ function Engine(opts) {
 
         // methods
       , render: render
+      , handleInputs: handleInputs
     }
 }
