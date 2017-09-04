@@ -8,5 +8,5 @@ window.addEventListener('load', function() {
       , seed: 4242
     });
 
-    console.log(engine.generate());
+    console.log(engine.render());
 });

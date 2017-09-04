@@ -3,7 +3,12 @@
 echo "copying files"
 cp src/index.min.html dist/index.html
 cp src/game.css dist/game.css #FIXME: minify css
-cat src/main.js > src/game.js
+cat src/msws.js             \
+    src/engine/actor.js     \
+    src/engine/pickup.js    \
+    src/engine/layer.js     \
+    src/engine/engine.js    \
+    src/main.js > src/game.js
 
 echo "minifying and compressing"
 echo "WARN: skipping css"
