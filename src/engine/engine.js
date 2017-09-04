@@ -133,7 +133,7 @@ function Engine(opts) {
     function aiTurn() {
         // process all non-player actors
         for (var id=1; id<actors.length; id++) {
-            var d = prng.getInt(4, 1);
+            var d = prng.getInt(4, 1) - 1;
             
             if (d == 0) actors[id].move(0, -1);
             if (d == 1) actors[id].move(-1, 0);
