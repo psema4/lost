@@ -2,6 +2,7 @@ window.addEventListener('load', function() {
     window.engine = new Engine({
         W: 20
       , H: 10
+      , D: 1
       , A: 10
       , P: 3
       , debug: false

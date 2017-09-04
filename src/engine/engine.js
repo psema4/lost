@@ -43,8 +43,9 @@
 DEBUG = true;
 
 LYR_FLOORSWALLS = 0;
-LYR_PICKUPS = 1;
-LYR_ACTORS = 2;
+LYR_DOORS = 1;
+LYR_PICKUPS = 2;
+LYR_ACTORS = 3;
 
 // alias Z to W, Q to A for AZERTY keyboards; see http://xem.github.io/articles/#jsgamesinputs
 KEY_W = 87; KEY_Z = 90; KEY_UP = 38;
@@ -57,159 +58,180 @@ KEY_ENTER = 13;
 function Engine(opts) {
     opts = opts || {};
 
-    var prng = opts.prng || new MSWS()
-      , seed = opts.seed || new Date().getTime()
-      , width = opts.W || 10
-      , height = opts.H || 10
-      , numPickups = opts.P || 3
-      , numActors = opts.A || 10
-      , layers = []
-      , pickups = []
-      , actors = [] 
-    ;
+    this.seed = opts.seed || 4242
+    this.width = opts.W || 10
+    this.height = opts.H || 10
+    this.numDoors = opts.D || 1
+    this.numPickups = opts.P || 3
+    this.numActors = opts.A || 10
+    this.layers = []
+    this.doors = []
+    this.pickups = []
+    this.actors = [] 
 
-    // Set the global prng
     if (typeof opts.debug != 'undefined') DEBUG = opts.debug;
-    prng.setSeed(seed);
+    window.addEventListener('keydown', this.handleInputs);
+    this.setSeed(seed);
+
+    return this;
+}
+
+Engine.prototype.setSeed = function(s) {
+    this.seed = s;
+    window.setSeed(s);
+    this.generateLayers();
+    this.render();
+}
+
+Engine.prototype.teardown = function() {
+    this.layers.forEach(function(layer) {
+        layer.map = undefined;
+        layer.thing = undefined;
+        layer.things = undefined;
+    });
+
+    this.layers = [];
+    this.doors = [];
+    this.pickups = [];
+    this.actors = [];
+}
+
+Engine.prototype.generateLayers = function() {
+    if (this.layers.length > 0) {
+        this.teardown();
+    }
 
     // Create a layer of floors and walls
-    layers.push(new Layer({ id: LYR_FLOORSWALLS, W: width, H: height, prng: prng, seed: seed }));
-    layers[LYR_FLOORSWALLS].generate();
+    this.layers.push(new Layer({ id: LYR_FLOORSWALLS, W: this.width, H: this.height }));
+    this.layers[LYR_FLOORSWALLS].generate();
+
+    // Create a layer for doors
+    this.layers.push(new Layer({ id: LYR_DOORS, W: this.width, H: this.height, N: this.numDoors, T: Door }));
+    this.layers[LYR_DOORS].generate(this.layers[LYR_FLOORSWALLS].map);
+    this.doors = this.layers[LYR_DOORS].things;
+    this.doors.forEach(function(door) {
+        door.dest = 4242 + prng.getInt(1000, 1);
+    });
 
     // Create a layer of pickups
-    layers.push(new Layer({ id: LYR_PICKUPS, W: width, H: height, N: numPickups, T: Pickup, prng: prng, seed: seed }));
-    layers[LYR_PICKUPS].generate(layers[LYR_FLOORSWALLS].map);
-    pickups = layers[LYR_PICKUPS].things;
+    this.layers.push(new Layer({ id: LYR_PICKUPS, W: this.width, H: this.height, N: this.numPickups, T: Pickup }));
+    this.layers[LYR_PICKUPS].generate(this.layers[LYR_FLOORSWALLS].map);
+    this.pickups = this.layers[LYR_PICKUPS].things;
     
     // Create a layer of actors
-    layers.push(new Layer({ id: LYR_ACTORS, W: width, H: height, N: numActors, T: Actor, prng: prng, seed: seed }));
-    layers[LYR_ACTORS].generate(layers[LYR_FLOORSWALLS].map);
-    actors = layers[LYR_ACTORS].things;
+    this.layers.push(new Layer({ id: LYR_ACTORS, W: this.width, H: this.height, N: this.numActors, T: Actor }));
+    this.layers[LYR_ACTORS].generate(this.layers[LYR_FLOORSWALLS].map);
+    this.actors = this.layers[LYR_ACTORS].things;
+}
 
+// handle inputs
+Engine.prototype.handleInputs = function(e) {
+    switch (e.which) {
+        case KEY_W:
+        case KEY_Z:
+        case KEY_UP:
+            engine.actors[0].move(0, -1);
+            engine.render();
+            break;
 
-    // handle inputs
-    function handleInputs(e) {
-        switch (e.which) {
-            case KEY_W:
-            case KEY_Z:
-            case KEY_UP:
-                actors[0].move(0, -1);
-                render();
-                break;
+        case KEY_A:
+        case KEY_Q:
+        case KEY_LEFT:
+            engine.actors[0].move(-1, 0);
+            engine.render();
+            break;
 
-            case KEY_A:
-            case KEY_Q:
-            case KEY_LEFT:
-                actors[0].move(-1, 0);
-                render();
-                break;
+        case KEY_S:
+        case KEY_DOWN:
+            engine.actors[0].move(0, 1);
+            engine.render();
+            break;
 
-            case KEY_S:
-            case KEY_DOWN:
-                actors[0].move(0, 1);
-                render();
-                break;
+        case KEY_D:
+        case KEY_RIGHT:
+            engine.actors[0].move(1, 0);
+            engine.render();
+            break;
 
-            case KEY_D:
-            case KEY_RIGHT:
-                actors[0].move(1, 0);
-                render();
-                break;
+        case KEY_SPACE:
+            console.log('space');
+            break;
 
-            case KEY_SPACE:
-                console.log('space');
-                break;
+        case KEY_ENTER:
+            console.log('enter');
+            break;
 
-            case KEY_ENTER:
-                console.log('enter');
-                break;
-
-            default:
-        }
-
-        aiTurn();
-    }
-    window.addEventListener('keydown', handleInputs);
-
-    function aiTurn() {
-        // process all non-player actors
-        for (var id=1; id<actors.length; id++) {
-            var d = prng.getInt(4, 1) - 1;
-            
-            if (d == 0) actors[id].move(0, -1);
-            if (d == 1) actors[id].move(-1, 0);
-            if (d == 2) actors[id].move(0, 1);
-            if (d == 3) actors[id].move(1, 0);
-
-            if (DEBUG) console.log('actor[%s] move direction: %s', id, d);
-        }
-
-        render();
+        default:
     }
 
-    // combine layers (raw render)
-    function mergeLayers() {
-        var tmpLayer = new Layer({ W: width, H: height, prng: prng, seed: seed })
-          , buf = ''
-        ;
+    engine.aiTurn();
+}
 
-        if (DEBUG) console.groupCollapsed('mergeLayer');
+Engine.prototype.aiTurn = function() {
+    // process all non-player actors
+    for (var id=1; id<this.actors.length; id++) {
+        var d = prng.getInt(4, 1) - 1;
+        
+        if (d == 0) this.actors[id].move(0, -1);
+        if (d == 1) this.actors[id].move(-1, 0);
+        if (d == 2) this.actors[id].move(0, 1);
+        if (d == 3) this.actors[id].move(1, 0);
 
-        for (var y=0; y<height; y++) {
-            for (var x=0; x<width; x++) {
-                tmpLayer.map[y][x] = layers[LYR_FLOORSWALLS].map[y][x];
+        if (DEBUG) console.log('actor[%s] move direction: %s', id, d);
+    }
 
-                if (DEBUG) console.log('FW: tmpLayer.map[%s][%s]: "%s"', y, x, tmpLayer.map[y][x]); 
+    this.render();
+}
 
-                // cells without walls copy from other layers
-                switch(tmpLayer.map[y][x]) {
-                    case ' ':
-                    case '.':
-                    case '~':
-                        if (layers[LYR_PICKUPS].map[y][x] != ' ') tmpLayer.map[y][x] = layers[LYR_PICKUPS].map[y][x];
-                        if (layers[LYR_ACTORS].map[y][x] != ' ') tmpLayer.map[y][x] = layers[LYR_ACTORS].map[y][x];
+// combine layers (raw render)
+Engine.prototype.mergeLayers = function() {
+    var tmpLayer = new Layer({ W: this.width, H: this.height })
+      , buf = ''
+    ;
 
-                        if (DEBUG) console.log('PA: tmpLayer[%s][%s]: "%s"', y, x, tmpLayer.map[y][x]); 
-                        break;
-                }
+    if (DEBUG) console.groupCollapsed('mergeLayer');
 
-                buf += tmpLayer.map[y][x];
+    for (var y=0; y<this.height; y++) {
+        for (var x=0; x<this.width; x++) {
+            tmpLayer.map[y][x] = this.layers[LYR_FLOORSWALLS].map[y][x];
+
+            if (DEBUG) console.log('FW: tmpLayer.map[%s][%s]: "%s"', y, x, tmpLayer.map[y][x]); 
+
+            // cells without walls copy from other layers
+            switch(tmpLayer.map[y][x]) {
+                case ' ':
+                case '.':
+                case '~':
+                    if (this.layers[LYR_DOORS].map[y][x] != ' ') tmpLayer.map[y][x] = this.layers[LYR_DOORS].map[y][x];
+                    if (this.layers[LYR_PICKUPS].map[y][x] != ' ') tmpLayer.map[y][x] = this.layers[LYR_PICKUPS].map[y][x];
+                    if (this.layers[LYR_ACTORS].map[y][x] != ' ') tmpLayer.map[y][x] = this.layers[LYR_ACTORS].map[y][x];
+
+                    if (DEBUG) console.log('PA: tmpLayer[%s][%s]: "%s"', y, x, tmpLayer.map[y][x]); 
+                    break;
             }
 
-            buf += "\n";
+            buf += tmpLayer.map[y][x];
         }
 
-        if (DEBUG) console.groupEnd();
-
-        return buf;
+        buf += "\n";
     }
 
-    // post-processing and final render
-    function render() {
-        var buf = mergeLayers();
+    if (DEBUG) console.groupEnd();
 
-        if (DEBUG) {
-            console.groupCollapsed('render');
-            console.log(buf);
-            console.groupEnd();
-        }
+    return buf;
+}
 
-        stage.innerText = buf;
+// post-processing and final render
+Engine.prototype.render = function() {
+    var buf = this.mergeLayers();
 
-        return buf;
+    if (DEBUG) {
+        console.groupCollapsed('render');
+        console.log(buf);
+        console.groupEnd();
     }
 
-    return {
-        // properties
-        opts: opts
-      , width: width
-      , height: height
-      , layers: layers
-      , pickups: pickups
-      , actors: actors
+    stage.innerText = buf;
 
-        // methods
-      , render: render
-      , handleInputs: handleInputs
-    }
+    return buf;
 }

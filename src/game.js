@@ -107,280 +107,272 @@
         window.MSWS = MSWS
     }
 })();
-STATE_NORMAL = 0
-STATE_AGITATED = 1
+window.setSeed = function(s) {
+    window.prng = new MSWS();
+    window.seed = s;
+    prng.setSeed(s);
+}
 
-function Actor(opts) {
+setSeed(4242);
+STATE_NORMAL = 0
+
+function Door(opts) {
     opts = opts || {};
 
-    var prng = opts.prng || new MSWS()
-      , seed = opts.seed || new Date().getTime()
-      , name = opts.name || 'ACTOR'
-      , glyph = 'a'
-      , layer = opts.layer || 0
-      , id = opts.id || 0
-      , x = opts.x || 0
-      , y = opts.y || 0
-      , state = opts.state || STATE_NORMAL
-    ;
+    this.name = opts.name || 'DOOR';
+    this.glyph = 'd';
+    this.layer = opts.layer || 0;
+    this.id = opts.id || 0;
+    this.x = opts.x || 0;
+    this.y = opts.y || 0;
+    this.state = opts.state || STATE_NORMAL;
+    this.dest = opts.dest || 0;
 
-    if (id == 0) {
-        glyph = '@';
-        hp = 3;
+    return this;
+}
 
-    } else {
-        hp = prng.getInt(3, 1);
-    }
-    
+Door.prototype.getName = function(id) {
+    var names = [ 'Door' ]
+    return names[0];
+}
 
-    function agitate() {
-        if (this.id ==0) return;
-
-        this.state = STATE_AGITATED;
-        this.glyph = 'A';
-        engine.layers[layer].map[y][x] = this.glyph;
-        engine.layers[this.layer].render();
-    }
-
-    function calm() {
-        if (this.id ==0) return;
-
-        this.state = STATE_NORMAL;
-        this.glyph = 'a';
-        engine.layers[layer].map[y][x] = this.glyph;
-        engine.layers[this.layer].render();
-    }
-
-    function move(dx, dy) {
-        var tx = this.x + dx
-          , ty = this.y + dy
-        ;
-
-        if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
-            console.warn('WARN: actor movement range is out of range, got: %s, %s', dx, dy);
-            return false;
-        }
-
-        if (tx < 0) tx = 0;
-        if (tx > engine.width) tx = engine.width;
-        if (ty < 0) ty = 0;
-        if (ty > engine.height) ty = engine.height;
-
-        //FIXME: check for collisions
-        var targetCell = engine.layers[0].map[ty][tx];
-
-        if (targetCell != '#') {
-            engine.layers[this.layer].map[this.y][this.x] = ' ';
-            this.x = tx;
-            this.y = ty;
-            engine.layers[this.layer].map[this.y][this.x] = this.glyph;
-            engine.layers[this.layer].render();
-        }
-
-        return true;
-    }
-
-    function getName(id) {
-        var names = [ 'Player', 'Actor1', 'Actor2', 'Actor3', 'Actor4', 'Actor5', 'Actor6', 'Actor7' ];
-
-        if (id < names.length) {
-            return names[id];
-
-        } else {
-            return 'Extra Actor';
-        }
-    }
-
-    return {
-        name: name
-      , glyph: glyph
-      , layer: layer
-      , id: id
-      , x: x
-      , y: y
-      , state: state
-      , agitate: agitate
-      , calm: calm
-      , move: move
-      , getName: getName
-    }
+Door.prototype.trigger = function() {
+    console.log('teleporting from %s to %s', engine.seed, this.dest);
+    engine.setSeed(this.dest);
 }
 STATE_NORMAL = 0
 
 function Pickup(opts) {
     opts = opts || {};
 
-    var prng = opts.prng || new MSWS()
-      , seed = opts.seed || new Date().getTime()
-      , name = opts.name || 'PICKUP'
-      , glyph = 'p'
-      , layer = opts.layer || 0
-      , id = opts.id || 0
-      , x = opts.x || 0
-      , y = opts.y || 0
-      , state = opts.state || STATE_NORMAL
+    this.name = opts.name || 'PICKUP';
+    this.glyph = 'p';
+    this.layer = opts.layer || 0;
+    this.id = opts.id || 0;
+    this.x = opts.x || 0;
+    this.y = opts.y || 0;
+    this.state = opts.state || STATE_NORMAL;
+
+    return this;
+}
+
+Pickup.prototype.getName = function(id) {
+    var names = [ 'Potion', 'Scroll', 'Sword', 'Gold' ]
+      , chance = prng.getInt(100, 1) - 1
+      , selected
     ;
 
-    function getName(id) {
-        var names = [ 'Potion', 'Scroll', 'Sword', 'Gold' ]
-          , chance = prng.getInt(100, 1) - 1
-          , selected
-        ;
+    if (chance < 35) {
+        selected = 0;
 
-        if (chance < 35) {
-            selected = 0;
+    } else if (chance < 70) {
+        selected = 1;
 
-        } else if (chance < 70) {
-            selected = 1;
+    } else if (chance < 90) {
+        selected = 2;
 
-        } else if (chance < 90) {
-            selected = 2;
-
-        } else {
-            selected = 3;
-        }
-
-        return names[selected];
+    } else {
+        selected = 3;
     }
 
-    return {
-        name: name
-      , glyph: glyph
-      , layer: layer
-      , id: id
-      , x: x
-      , y: y
-      , state: state
-      , getName: getName
+    return names[selected];
+}
+STATE_NORMAL = 0
+STATE_AGITATED = 1
+
+function Actor(opts) {
+    opts = opts || {};
+
+    var id = opts.id || 0;
+
+    this.name = opts.name || 'ACTOR';
+    this.glyph = 'a';
+    this.layer = opts.layer || 0;
+    this.x = opts.x || 0;
+    this.y = opts.y || 0;
+    this.state = opts.state || STATE_NORMAL;
+    this.hp = 1;
+
+    if (id == 0) {
+        this.glyph = '@';
+        this.hp = 3;
+
+    } else {
+        this.hp = prng.getInt(3, 1);
+    }
+
+    return this;
+}
+
+Actor.prototype.agitate = function() {
+    if (this.id ==0) return;
+
+    this.state = STATE_AGITATED;
+    this.glyph = 'A';
+    engine.layers[layer].map[y][x] = this.glyph;
+    engine.layers[this.layer].render();
+}
+
+Actor.prototype.calm = function() {
+    if (this.id ==0) return;
+
+    this.state = STATE_NORMAL;
+    this.glyph = 'a';
+    engine.layers[layer].map[y][x] = this.glyph;
+    engine.layers[this.layer].render();
+}
+
+Actor.prototype.move = function(dx, dy) {
+    var tx = this.x + dx
+      , ty = this.y + dy
+    ;
+
+    if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+        console.warn('WARN: actor movement range is out of range, got: %s, %s', dx, dy);
+        return false;
+    }
+
+    if (tx < 0) tx = 0;
+    if (tx > engine.width) tx = engine.width;
+    if (ty < 0) ty = 0;
+    if (ty > engine.height) ty = engine.height;
+
+    //FIXME: check for collisions
+    var targetCell = engine.layers[0].map[ty][tx];
+
+    if (targetCell != '#') {
+        engine.layers[this.layer].map[this.y][this.x] = ' ';
+        this.x = tx;
+        this.y = ty;
+        engine.layers[this.layer].map[this.y][this.x] = this.glyph;
+        engine.layers[this.layer].render();
+    }
+
+    return true;
+}
+
+Actor.prototype.getName = function(id) {
+    var names = [ 'Player', 'Actor1', 'Actor2', 'Actor3', 'Actor4', 'Actor5', 'Actor6', 'Actor7' ];
+
+    if (this.id < names.length) {
+        return names[this.id];
+
+    } else {
+        return 'Extra Actor';
     }
 }
 function Layer(opts) {
     opts = opts || {};
 
-    var prng = opts.prng || new MSWS()
-      , seed = opts.seed || new Date().getTime()
-      , width = opts.W || 10
-      , height = opts.H || 10
-      , id = opts.id || uuid()
-      , thing = !!opts.T && opts.T || false
-      , numThings = opts.N || 10
-      , map = []
-      , things = []
-    ;
+    this.width = opts.W || 10;
+    this.height = opts.H || 10;
+    this.id = opts.id || this.uuid();
+    this.thing = !!opts.T && opts.T || false;
+    this.numThings = opts.N || 10;
+    this.map = [];
+    this.things = [];
 
-    prng.setSeed(seed);
+    this.empty();
 
-    function uuid() {
-        return 0;
-    }
+    return this;
+}
 
-    function empty() {
-        function emptyRow() {
-            return ' '.repeat(width).split('');
-        }
+Layer.prototype.uuid = function() {
+    return 0;
+}
 
-        for (var i=0; i<height; i++)
-            map.push(emptyRow());
+Layer.prototype.empty = function() {
+    this.map = [];
 
-        return id;
-    }
+    for (var y=0; y<this.height; y++) {
+        this.map.push([]);
 
-    function from(src) {
-        switch (typeof src) {
-            case 'string':
-                // split rendered output into new map layer
-                console.warn('STUB: from(rendered)');
-                break;
-
-            case 'object':
-                // copy array of arrays into new map layer
-                console.warn('STUB: from(AoA)');
-                break;
-
-            default:
-                console.warn('Layer.from(): Unsupported layer source');
+        for (var x=0; x<this.width; x++) {
+            this.map[y][x] = ' ';
         }
     }
+    return this.id;
+}
 
-    // When generating things, a floors-and-walls map (AoA) is required.
-    function generate(floorsAndWalls) {
-        var pending = x = y = p = a = 0;
+Layer.prototype.from = function(src) {
+    switch (typeof src) {
+        case 'string':
+            // split rendered output into new map layer
+            console.warn('STUB: from(rendered)');
+            break;
 
-        if (!thing) {  // Floors and walls
-            for (y=0; y<height; y++) {
-                for (x=0; x<width; x++) {
-                    var glyph = '';
+        case 'object':
+            // copy array of arrays into new map layer
+            console.warn('STUB: from(AoA)');
+            break;
 
-                    if (y == 0 || y == height-1 || x == 0 || x == width-1) {
-                        glyph = '#';
-
-                    } else {
-                        glyph = +prng.getFixed(2, 1, 0) > 0.75 ? '#' : '.';
-                    }
-
-                    map[y][x] = glyph;
-                }
-            }
-
-        } else { // Things
-            if (typeof floorsAndWalls != 'object') {
-                console.warn('WARN: invalid floorsAndWalls map');
-                return false;
-            }
-
-            for (t=0; t<numThings; t++) {
-                pending = true;
-                x = y = 0;
-
-                while (pending) {
-                    x = prng.getInt(width-1, 0);
-                    y = prng.getInt(height-1, 0);
-
-                    if (floorsAndWalls[y][x] != '#') {
-                        things[t] = new thing({ layer: this.id, id: t, x: x, y: y, prng: prng, seed: seed });
-                        var name = things[t].getName(t);
-                        things[t].name = name;
-                        pending = false;
-
-                        map[y][x] = things[t].glyph || '?';
-                    }
-                }
-            }
-        }
-
-        return render();
-    }
-
-    function render() {
-        var buf = '';
-
-        for (var y=0; y<height; y++) {
-            for (var x=0; x<width; x++)
-                buf += map[y][x];
-            buf += "\n";
-        }
-        
-        return buf;
-    }
-
-    empty();
-
-    return {
-        // properties
-        opts: opts
-      , id: id
-      , map: map
-      , thing: thing
-      , things: things
-
-        // methods
-      , uuid: uuid
-      , empty: empty
-      , from: from
-      , generate: generate
-      , render: render
+        default:
+            console.warn('Layer.from(): Unsupported layer source');
     }
 }
+
+// When generating things, a floors-and-walls map (AoA) is required.
+Layer.prototype.generate = function(floorsAndWalls) {
+    var pending = x = y = p = a = 0;
+
+    if (!this.thing) {  // Floors and walls
+        for (y=0; y<this.height; y++) {
+            for (x=0; x<this.width; x++) {
+                var glyph = '';
+
+                if (y == 0 || y == this.height-1 || x == 0 || x == this.width-1) {
+                    glyph = '#';
+
+                } else {
+                    glyph = +prng.getFixed(2, 1, 0) > 0.75 ? '#' : '.';
+                }
+
+                this.map[y][x] = glyph;
+            }
+        }
+
+    } else { // Things
+        if (typeof floorsAndWalls != 'object') {
+            console.warn('WARN: invalid floorsAndWalls map');
+            return false;
+        }
+
+        for (t=0; t<this.numThings; t++) {
+            pending = true;
+            x = y = 0;
+
+            while (pending) {
+                x = prng.getInt(this.width-1, 0);
+                y = prng.getInt(this.height-1, 0);
+
+                if (floorsAndWalls[y][x] != '#') {
+                    this.things[t] = new this.thing({ layer: this.id, id: t, x: x, y: y });
+
+                    var name = this.things[t].getName(t);
+                    this.things[t].name = name;
+                    pending = false;
+
+                    this.map[y][x] = this.things[t].glyph || '?';
+                }
+            }
+        }
+    }
+
+    return this.render();
+}
+
+Layer.prototype.render = function() {
+    var buf = '';
+
+    for (var y=0; y<this.height; y++) {
+        for (var x=0; x<this.width; x++)
+            buf += this.map[y][x];
+        buf += "\n";
+    }
+    
+    return buf;
+}
+
 //FIXME: World map
 
 /*
@@ -426,8 +418,9 @@ function Layer(opts) {
 DEBUG = true;
 
 LYR_FLOORSWALLS = 0;
-LYR_PICKUPS = 1;
-LYR_ACTORS = 2;
+LYR_DOORS = 1;
+LYR_PICKUPS = 2;
+LYR_ACTORS = 3;
 
 // alias Z to W, Q to A for AZERTY keyboards; see http://xem.github.io/articles/#jsgamesinputs
 KEY_W = 87; KEY_Z = 90; KEY_UP = 38;
@@ -440,172 +433,195 @@ KEY_ENTER = 13;
 function Engine(opts) {
     opts = opts || {};
 
-    var prng = opts.prng || new MSWS()
-      , seed = opts.seed || new Date().getTime()
-      , width = opts.W || 10
-      , height = opts.H || 10
-      , numPickups = opts.P || 3
-      , numActors = opts.A || 10
-      , layers = []
-      , pickups = []
-      , actors = [] 
-    ;
+    this.seed = opts.seed || 4242
+    this.width = opts.W || 10
+    this.height = opts.H || 10
+    this.numDoors = opts.D || 1
+    this.numPickups = opts.P || 3
+    this.numActors = opts.A || 10
+    this.layers = []
+    this.doors = []
+    this.pickups = []
+    this.actors = [] 
 
-    // Set the global prng
     if (typeof opts.debug != 'undefined') DEBUG = opts.debug;
-    prng.setSeed(seed);
+    window.addEventListener('keydown', this.handleInputs);
+    this.setSeed(seed);
+
+    return this;
+}
+
+Engine.prototype.setSeed = function(s) {
+    this.seed = s;
+    window.setSeed(s);
+    this.generateLayers();
+    this.render();
+}
+
+Engine.prototype.teardown = function() {
+    this.layers.forEach(function(layer) {
+        layer.map = undefined;
+        layer.thing = undefined;
+        layer.things = undefined;
+    });
+
+    this.layers = [];
+    this.doors = [];
+    this.pickups = [];
+    this.actors = [];
+}
+
+Engine.prototype.generateLayers = function() {
+    if (this.layers.length > 0) {
+        this.teardown();
+    }
 
     // Create a layer of floors and walls
-    layers.push(new Layer({ id: LYR_FLOORSWALLS, W: width, H: height, prng: prng, seed: seed }));
-    layers[LYR_FLOORSWALLS].generate();
+    this.layers.push(new Layer({ id: LYR_FLOORSWALLS, W: this.width, H: this.height }));
+    this.layers[LYR_FLOORSWALLS].generate();
+
+    // Create a layer for doors
+    this.layers.push(new Layer({ id: LYR_DOORS, W: this.width, H: this.height, N: this.numDoors, T: Door }));
+    this.layers[LYR_DOORS].generate(this.layers[LYR_FLOORSWALLS].map);
+    this.doors = this.layers[LYR_DOORS].things;
+    this.doors.forEach(function(door) {
+        door.dest = 4242 + prng.getInt(1000, 1);
+    });
 
     // Create a layer of pickups
-    layers.push(new Layer({ id: LYR_PICKUPS, W: width, H: height, N: numPickups, T: Pickup, prng: prng, seed: seed }));
-    layers[LYR_PICKUPS].generate(layers[LYR_FLOORSWALLS].map);
-    pickups = layers[LYR_PICKUPS].things;
+    this.layers.push(new Layer({ id: LYR_PICKUPS, W: this.width, H: this.height, N: this.numPickups, T: Pickup }));
+    this.layers[LYR_PICKUPS].generate(this.layers[LYR_FLOORSWALLS].map);
+    this.pickups = this.layers[LYR_PICKUPS].things;
     
     // Create a layer of actors
-    layers.push(new Layer({ id: LYR_ACTORS, W: width, H: height, N: numActors, T: Actor, prng: prng, seed: seed }));
-    layers[LYR_ACTORS].generate(layers[LYR_FLOORSWALLS].map);
-    actors = layers[LYR_ACTORS].things;
+    this.layers.push(new Layer({ id: LYR_ACTORS, W: this.width, H: this.height, N: this.numActors, T: Actor }));
+    this.layers[LYR_ACTORS].generate(this.layers[LYR_FLOORSWALLS].map);
+    this.actors = this.layers[LYR_ACTORS].things;
+}
 
+// handle inputs
+Engine.prototype.handleInputs = function(e) {
+    switch (e.which) {
+        case KEY_W:
+        case KEY_Z:
+        case KEY_UP:
+            engine.actors[0].move(0, -1);
+            engine.render();
+            break;
 
-    // handle inputs
-    function handleInputs(e) {
-        switch (e.which) {
-            case KEY_W:
-            case KEY_Z:
-            case KEY_UP:
-                actors[0].move(0, -1);
-                render();
-                break;
+        case KEY_A:
+        case KEY_Q:
+        case KEY_LEFT:
+            engine.actors[0].move(-1, 0);
+            engine.render();
+            break;
 
-            case KEY_A:
-            case KEY_Q:
-            case KEY_LEFT:
-                actors[0].move(-1, 0);
-                render();
-                break;
+        case KEY_S:
+        case KEY_DOWN:
+            engine.actors[0].move(0, 1);
+            engine.render();
+            break;
 
-            case KEY_S:
-            case KEY_DOWN:
-                actors[0].move(0, 1);
-                render();
-                break;
+        case KEY_D:
+        case KEY_RIGHT:
+            engine.actors[0].move(1, 0);
+            engine.render();
+            break;
 
-            case KEY_D:
-            case KEY_RIGHT:
-                actors[0].move(1, 0);
-                render();
-                break;
+        case KEY_SPACE:
+            console.log('space');
+            break;
 
-            case KEY_SPACE:
-                console.log('space');
-                break;
+        case KEY_ENTER:
+            console.log('enter');
+            break;
 
-            case KEY_ENTER:
-                console.log('enter');
-                break;
-
-            default:
-        }
-
-        aiTurn();
-    }
-    window.addEventListener('keydown', handleInputs);
-
-    function aiTurn() {
-        // process all non-player actors
-        for (var id=1; id<actors.length; id++) {
-            var d = prng.getInt(4, 1) - 1;
-            
-            if (d == 0) actors[id].move(0, -1);
-            if (d == 1) actors[id].move(-1, 0);
-            if (d == 2) actors[id].move(0, 1);
-            if (d == 3) actors[id].move(1, 0);
-
-            if (DEBUG) console.log('actor[%s] move direction: %s', id, d);
-        }
-
-        render();
+        default:
     }
 
-    // combine layers (raw render)
-    function mergeLayers() {
-        var tmpLayer = new Layer({ W: width, H: height, prng: prng, seed: seed })
-          , buf = ''
-        ;
+    engine.aiTurn();
+}
 
-        if (DEBUG) console.groupCollapsed('mergeLayer');
+Engine.prototype.aiTurn = function() {
+    // process all non-player actors
+    for (var id=1; id<this.actors.length; id++) {
+        var d = prng.getInt(4, 1) - 1;
+        
+        if (d == 0) this.actors[id].move(0, -1);
+        if (d == 1) this.actors[id].move(-1, 0);
+        if (d == 2) this.actors[id].move(0, 1);
+        if (d == 3) this.actors[id].move(1, 0);
 
-        for (var y=0; y<height; y++) {
-            for (var x=0; x<width; x++) {
-                tmpLayer.map[y][x] = layers[LYR_FLOORSWALLS].map[y][x];
+        if (DEBUG) console.log('actor[%s] move direction: %s', id, d);
+    }
 
-                if (DEBUG) console.log('FW: tmpLayer.map[%s][%s]: "%s"', y, x, tmpLayer.map[y][x]); 
+    this.render();
+}
 
-                // cells without walls copy from other layers
-                switch(tmpLayer.map[y][x]) {
-                    case ' ':
-                    case '.':
-                    case '~':
-                        if (layers[LYR_PICKUPS].map[y][x] != ' ') tmpLayer.map[y][x] = layers[LYR_PICKUPS].map[y][x];
-                        if (layers[LYR_ACTORS].map[y][x] != ' ') tmpLayer.map[y][x] = layers[LYR_ACTORS].map[y][x];
+// combine layers (raw render)
+Engine.prototype.mergeLayers = function() {
+    var tmpLayer = new Layer({ W: this.width, H: this.height })
+      , buf = ''
+    ;
 
-                        if (DEBUG) console.log('PA: tmpLayer[%s][%s]: "%s"', y, x, tmpLayer.map[y][x]); 
-                        break;
-                }
+    if (DEBUG) console.groupCollapsed('mergeLayer');
 
-                buf += tmpLayer.map[y][x];
+    for (var y=0; y<this.height; y++) {
+        for (var x=0; x<this.width; x++) {
+            tmpLayer.map[y][x] = this.layers[LYR_FLOORSWALLS].map[y][x];
+
+            if (DEBUG) console.log('FW: tmpLayer.map[%s][%s]: "%s"', y, x, tmpLayer.map[y][x]); 
+
+            // cells without walls copy from other layers
+            switch(tmpLayer.map[y][x]) {
+                case ' ':
+                case '.':
+                case '~':
+                    if (this.layers[LYR_DOORS].map[y][x] != ' ') tmpLayer.map[y][x] = this.layers[LYR_DOORS].map[y][x];
+                    if (this.layers[LYR_PICKUPS].map[y][x] != ' ') tmpLayer.map[y][x] = this.layers[LYR_PICKUPS].map[y][x];
+                    if (this.layers[LYR_ACTORS].map[y][x] != ' ') tmpLayer.map[y][x] = this.layers[LYR_ACTORS].map[y][x];
+
+                    if (DEBUG) console.log('PA: tmpLayer[%s][%s]: "%s"', y, x, tmpLayer.map[y][x]); 
+                    break;
             }
 
-            buf += "\n";
+            buf += tmpLayer.map[y][x];
         }
 
-        if (DEBUG) console.groupEnd();
-
-        return buf;
+        buf += "\n";
     }
 
-    // post-processing and final render
-    function render() {
-        var buf = mergeLayers();
+    if (DEBUG) console.groupEnd();
 
-        if (DEBUG) {
-            console.groupCollapsed('render');
-            console.log(buf);
-            console.groupEnd();
-        }
+    return buf;
+}
 
-        stage.innerText = buf;
+// post-processing and final render
+Engine.prototype.render = function() {
+    var buf = this.mergeLayers();
 
-        return buf;
+    if (DEBUG) {
+        console.groupCollapsed('render');
+        console.log(buf);
+        console.groupEnd();
     }
 
-    return {
-        // properties
-        opts: opts
-      , width: width
-      , height: height
-      , layers: layers
-      , pickups: pickups
-      , actors: actors
+    stage.innerText = buf;
 
-        // methods
-      , render: render
-      , handleInputs: handleInputs
-    }
+    return buf;
 }
 window.addEventListener('load', function() {
     window.engine = new Engine({
         W: 20
       , H: 10
+      , D: 1
       , A: 10
       , P: 3
       , debug: false
       , seed: 4242
     });
 
+    // chrome 60 for android doesn't seem to like treating dom elements with id's as global vars, use querySelector
     function $(sel) { return document.querySelector(sel); }
 
     $('#btn_up').addEventListener('click', function() { engine.handleInputs({ which: 87 }); });

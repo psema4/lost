@@ -4,8 +4,10 @@ echo "copying files"
 cp src/index.min.html dist/index.html
 cp src/game.css dist/game.css #FIXME: minify css
 cat src/msws.js             \
-    src/engine/actor.js     \
+    src/prng.js             \
+    src/engine/door.js      \
     src/engine/pickup.js    \
+    src/engine/actor.js     \
     src/engine/layer.js     \
     src/engine/engine.js    \
     src/main.js > src/game.js
