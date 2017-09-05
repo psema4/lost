@@ -1,3 +1,5 @@
+function _$(sel) { return document.querySelector(sel); }
+
 window.addEventListener('load', function() {
     window.engine = new Engine({
         W: 20
@@ -9,13 +11,11 @@ window.addEventListener('load', function() {
       , seed: 4242
     });
 
-    // chrome 60 for android doesn't seem to like treating dom elements with id's as global vars, use querySelector
-    function $(sel) { return document.querySelector(sel); }
 
-    $('#btn_up').addEventListener('click', function() { engine.handleInputs({ which: 87 }); });
-    $('#btn_lt').addEventListener('click', function() { engine.handleInputs({ which: 65 }); });
-    $('#btn_dn').addEventListener('click', function() { engine.handleInputs({ which: 83 }); });
-    $('#btn_rt').addEventListener('click', function() { engine.handleInputs({ which: 68 }); });
+    _$('#btn_up').addEventListener('click', function() { engine.handleInputs({ which: 87 }); });
+    _$('#btn_lt').addEventListener('click', function() { engine.handleInputs({ which: 65 }); });
+    _$('#btn_dn').addEventListener('click', function() { engine.handleInputs({ which: 83 }); });
+    _$('#btn_rt').addEventListener('click', function() { engine.handleInputs({ which: 68 }); });
 
     engine.render();
 });

@@ -9,6 +9,7 @@ cat src/msws.js             \
     src/engine/pickup.js    \
     src/engine/actor.js     \
     src/engine/layer.js     \
+    src/engine/player.js    \
     src/engine/engine.js    \
     src/main.js > src/game.js
 

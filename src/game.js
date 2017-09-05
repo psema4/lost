@@ -177,6 +177,13 @@ Pickup.prototype.getName = function(id) {
 
     return names[selected];
 }
+
+Pickup.prototype.trigger = function() {
+    console.log('Pickup %s: %s', this.id, this.name);
+    engine.layers[2].map[this.y][this.x] = ' ';
+    engine.player.addItem(this.name);
+    engine.pickups[this.id] = undefined;
+}
 STATE_NORMAL = 0
 STATE_AGITATED = 1
 
@@ -198,8 +205,10 @@ function Actor(opts) {
         this.hp = 3;
 
     } else {
-        this.hp = prng.getInt(3, 1);
+        this.hp = prng.getInt(2, 1);
     }
+
+    this.id = id;
 
     return this;
 }
@@ -222,8 +231,9 @@ Actor.prototype.calm = function() {
     engine.layers[this.layer].render();
 }
 
-Actor.prototype.move = function(dx, dy) {
-    var tx = this.x + dx
+Actor.prototype.move = function(dx, dy, isPlayer) {
+    var id = this.id
+      , tx = this.x + dx
       , ty = this.y + dy
     ;
 
@@ -237,8 +247,60 @@ Actor.prototype.move = function(dx, dy) {
     if (ty < 0) ty = 0;
     if (ty > engine.height) ty = engine.height;
 
-    //FIXME: check for collisions
-    var targetCell = engine.layers[0].map[ty][tx];
+    var targetCell = engine.layers[0].map[ty][tx]
+      , d = engine.layers[1].map[ty][tx]
+      , p = engine.layers[2].map[ty][tx]
+      , a = engine.layers[3].map[ty][tx]
+    ;
+
+    // Collisions
+    if (isPlayer) {
+        if (d.toLowerCase() == 'd') {
+            engine.doors.forEach(function(door) {
+                if (ty == door.y && tx == door.x) {
+                    door.trigger(this);
+                }
+            });
+        }
+
+        if (p.toLowerCase() == 'p') {
+            engine.pickups.forEach(function(pickup) {
+                if (pickup && ty == pickup.y && tx == pickup.x) {
+                    pickup.trigger(this);
+                }
+            });
+        }
+
+        if (a.toLowerCase() == 'a') {
+            engine.actors.forEach(function(actor) {
+                if (!actor) return;
+
+                if (ty == actor.y && tx == actor.x) {
+                    actor.hit(this);
+                }
+            });
+            return true; // prevent move
+        }
+
+    } else {
+        if (a == '@') {
+            engine.player.hit(this);
+            return true; // prevent move
+        }
+
+        if (a.toLowerCase() == 'a') {
+            var attacker = this;
+
+            engine.actors.forEach(function(actor) {
+                if (!actor) return;
+
+                if (ty == actor.y && tx == actor.x) {
+                    actor.hit(attacker);
+                }
+            });
+            return true; // prevent move
+        }
+    }
 
     if (targetCell != '#') {
         engine.layers[this.layer].map[this.y][this.x] = ' ';
@@ -260,6 +322,27 @@ Actor.prototype.getName = function(id) {
     } else {
         return 'Extra Actor';
     }
+}
+
+Actor.prototype.hit = function(other) {
+    if (other.engine) other = engine.actors[0];
+
+    console.log('actor %s hit actor %s', other.id, this.id);
+
+    this.hp -= 1;
+
+    if (this.hp <= 0) {
+        this.hp = 0;
+        this.die();
+    }
+    
+}
+
+Actor.prototype.die = function() {
+    console.log('actor %s died', this.id);
+
+    engine.layers[3].map[this.y][this.x] = ' ';
+    engine.actors[this.id] = undefined;
 }
 function Layer(opts) {
     opts = opts || {};
@@ -373,6 +456,35 @@ Layer.prototype.render = function() {
     return buf;
 }
 
+function Player(opts) {
+    opts = opts || {};
+
+    this.hp = opts.hp || 3;
+    this.inventory = [];
+
+    return this;
+}
+
+Player.prototype.hit = function(other) {
+    console.log('actor %s hit player', other.id);
+
+    this.hp -= 1;
+
+    if (this.hp <= 0) {
+        this.hp = 0;
+        this.die();
+    }
+
+    _$('#hp').innerText = this.hp;
+}
+
+Player.prototype.addItem = function(item) {
+    this.inventory.push(item);
+}
+
+Player.prototype.die = function() {
+    console.log('player died');
+}
 //FIXME: World map
 
 /*
@@ -433,16 +545,17 @@ KEY_ENTER = 13;
 function Engine(opts) {
     opts = opts || {};
 
-    this.seed = opts.seed || 4242
-    this.width = opts.W || 10
-    this.height = opts.H || 10
-    this.numDoors = opts.D || 1
-    this.numPickups = opts.P || 3
-    this.numActors = opts.A || 10
-    this.layers = []
-    this.doors = []
-    this.pickups = []
-    this.actors = [] 
+    this.seed = opts.seed || 4242;
+    this.width = opts.W || 10;
+    this.height = opts.H || 10;
+    this.numDoors = opts.D || 1;
+    this.numPickups = opts.P || 3;
+    this.numActors = opts.A || 10;
+    this.layers = [];
+    this.doors = [];
+    this.pickups = [];
+    this.actors = [];
+    this.player = new Player();
 
     if (typeof opts.debug != 'undefined') DEBUG = opts.debug;
     window.addEventListener('keydown', this.handleInputs);
@@ -459,12 +572,13 @@ Engine.prototype.setSeed = function(s) {
 }
 
 Engine.prototype.teardown = function() {
+/*
     this.layers.forEach(function(layer) {
         layer.map = undefined;
         layer.thing = undefined;
         layer.things = undefined;
     });
-
+*/
     this.layers = [];
     this.doors = [];
     this.pickups = [];
@@ -505,27 +619,23 @@ Engine.prototype.handleInputs = function(e) {
         case KEY_W:
         case KEY_Z:
         case KEY_UP:
-            engine.actors[0].move(0, -1);
-            engine.render();
+            engine.actors[0].move(0, -1, true);
             break;
 
         case KEY_A:
         case KEY_Q:
         case KEY_LEFT:
-            engine.actors[0].move(-1, 0);
-            engine.render();
+            engine.actors[0].move(-1, 0, true);
             break;
 
         case KEY_S:
         case KEY_DOWN:
-            engine.actors[0].move(0, 1);
-            engine.render();
+            engine.actors[0].move(0, 1, true);
             break;
 
         case KEY_D:
         case KEY_RIGHT:
-            engine.actors[0].move(1, 0);
-            engine.render();
+            engine.actors[0].move(1, 0, true);
             break;
 
         case KEY_SPACE:
@@ -539,21 +649,23 @@ Engine.prototype.handleInputs = function(e) {
         default:
     }
 
+    engine.render();
     engine.aiTurn();
 }
 
 Engine.prototype.aiTurn = function() {
     // process all non-player actors
-    for (var id=1; id<this.actors.length; id++) {
-        var d = prng.getInt(4, 1) - 1;
-        
-        if (d == 0) this.actors[id].move(0, -1);
-        if (d == 1) this.actors[id].move(-1, 0);
-        if (d == 2) this.actors[id].move(0, 1);
-        if (d == 3) this.actors[id].move(1, 0);
+    this.actors.forEach(function(actor) {
+        if ((!actor) || actor.id == 0) return;
 
-        if (DEBUG) console.log('actor[%s] move direction: %s', id, d);
-    }
+        var d = prng.getInt(4, 1) - 1;
+        if (DEBUG) console.log('  actor %s move direction: %s', actor.id, d);
+
+        if (d == 0) actor.move(0, -1);
+        if (d == 1) actor.move(-1, 0);
+        if (d == 2) actor.move(0, 1);
+        if (d == 3) actor.move(1, 0);
+    });
 
     this.render();
 }
@@ -610,6 +722,8 @@ Engine.prototype.render = function() {
 
     return buf;
 }
+function _$(sel) { return document.querySelector(sel); }
+
 window.addEventListener('load', function() {
     window.engine = new Engine({
         W: 20
@@ -621,13 +735,11 @@ window.addEventListener('load', function() {
       , seed: 4242
     });
 
-    // chrome 60 for android doesn't seem to like treating dom elements with id's as global vars, use querySelector
-    function $(sel) { return document.querySelector(sel); }
 
-    $('#btn_up').addEventListener('click', function() { engine.handleInputs({ which: 87 }); });
-    $('#btn_lt').addEventListener('click', function() { engine.handleInputs({ which: 65 }); });
-    $('#btn_dn').addEventListener('click', function() { engine.handleInputs({ which: 83 }); });
-    $('#btn_rt').addEventListener('click', function() { engine.handleInputs({ which: 68 }); });
+    _$('#btn_up').addEventListener('click', function() { engine.handleInputs({ which: 87 }); });
+    _$('#btn_lt').addEventListener('click', function() { engine.handleInputs({ which: 65 }); });
+    _$('#btn_dn').addEventListener('click', function() { engine.handleInputs({ which: 83 }); });
+    _$('#btn_rt').addEventListener('click', function() { engine.handleInputs({ which: 68 }); });
 
     engine.render();
 });

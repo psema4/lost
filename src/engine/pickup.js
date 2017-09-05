@@ -35,3 +35,10 @@ Pickup.prototype.getName = function(id) {
 
     return names[selected];
 }
+
+Pickup.prototype.trigger = function() {
+    console.log('Pickup %s: %s', this.id, this.name);
+    engine.layers[2].map[this.y][this.x] = ' ';
+    engine.player.addItem(this.name);
+    engine.pickups[this.id] = undefined;
+}

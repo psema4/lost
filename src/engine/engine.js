@@ -58,16 +58,17 @@ KEY_ENTER = 13;
 function Engine(opts) {
     opts = opts || {};
 
-    this.seed = opts.seed || 4242
-    this.width = opts.W || 10
-    this.height = opts.H || 10
-    this.numDoors = opts.D || 1
-    this.numPickups = opts.P || 3
-    this.numActors = opts.A || 10
-    this.layers = []
-    this.doors = []
-    this.pickups = []
-    this.actors = [] 
+    this.seed = opts.seed || 4242;
+    this.width = opts.W || 10;
+    this.height = opts.H || 10;
+    this.numDoors = opts.D || 1;
+    this.numPickups = opts.P || 3;
+    this.numActors = opts.A || 10;
+    this.layers = [];
+    this.doors = [];
+    this.pickups = [];
+    this.actors = [];
+    this.player = new Player();
 
     if (typeof opts.debug != 'undefined') DEBUG = opts.debug;
     window.addEventListener('keydown', this.handleInputs);
@@ -84,12 +85,6 @@ Engine.prototype.setSeed = function(s) {
 }
 
 Engine.prototype.teardown = function() {
-    this.layers.forEach(function(layer) {
-        layer.map = undefined;
-        layer.thing = undefined;
-        layer.things = undefined;
-    });
-
     this.layers = [];
     this.doors = [];
     this.pickups = [];
@@ -130,27 +125,23 @@ Engine.prototype.handleInputs = function(e) {
         case KEY_W:
         case KEY_Z:
         case KEY_UP:
-            engine.actors[0].move(0, -1);
-            engine.render();
+            engine.actors[0].move(0, -1, true);
             break;
 
         case KEY_A:
         case KEY_Q:
         case KEY_LEFT:
-            engine.actors[0].move(-1, 0);
-            engine.render();
+            engine.actors[0].move(-1, 0, true);
             break;
 
         case KEY_S:
         case KEY_DOWN:
-            engine.actors[0].move(0, 1);
-            engine.render();
+            engine.actors[0].move(0, 1, true);
             break;
 
         case KEY_D:
         case KEY_RIGHT:
-            engine.actors[0].move(1, 0);
-            engine.render();
+            engine.actors[0].move(1, 0, true);
             break;
 
         case KEY_SPACE:
@@ -164,21 +155,23 @@ Engine.prototype.handleInputs = function(e) {
         default:
     }
 
+    engine.render();
     engine.aiTurn();
 }
 
 Engine.prototype.aiTurn = function() {
     // process all non-player actors
-    for (var id=1; id<this.actors.length; id++) {
-        var d = prng.getInt(4, 1) - 1;
-        
-        if (d == 0) this.actors[id].move(0, -1);
-        if (d == 1) this.actors[id].move(-1, 0);
-        if (d == 2) this.actors[id].move(0, 1);
-        if (d == 3) this.actors[id].move(1, 0);
+    this.actors.forEach(function(actor) {
+        if ((!actor) || actor.id == 0) return;
 
-        if (DEBUG) console.log('actor[%s] move direction: %s', id, d);
-    }
+        var d = prng.getInt(4, 1) - 1;
+        if (DEBUG) console.log('  actor %s move direction: %s', actor.id, d);
+
+        if (d == 0) actor.move(0, -1);
+        if (d == 1) actor.move(-1, 0);
+        if (d == 2) actor.move(0, 1);
+        if (d == 3) actor.move(1, 0);
+    });
 
     this.render();
 }
