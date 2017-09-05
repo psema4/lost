@@ -10,28 +10,42 @@
     </head>
 
     <body>
-        <header>
-            Lost<br/>
-            <span id=message><span>
-        </header>
+        <div id="game">
+            <header>
+                Lost<br/>
+                <span id=message><span>
+            </header>
 
-        <div id='main'>
-            <article>
-                <tt><pre id=stage></pre></tt>
-            </article>
+            <div id='main'>
+                <article>
+                    <tt><pre id=stage></pre></tt>
+                </article>
 
-            <nav>
-                <button id=btn_up>Up</button><br/>
-                <button id=btn_lt>Lt</button> <button id=btn_dn>Dn</button> <button id=btn_rt>Rt</button>
-            </nav>
+                <nav>
+                    <button id=btn_up>Up</button><br/>
+                    <button id=btn_lt>Lt</button> <button id=btn_dn>Dn</button> <button id=btn_rt>Rt</button>
+                </nav>
 
-            <aside>
-                HP: <span id=hp>3</span><br/>
-                Scrolls: <span id=scrolls>0</span>
-            </aside>
+                <aside>
+                    <div id=stats1>
+                        HP: <span id=hp>3</span><br/>
+                        Potions: <span id=potion>0</span>
+                    </div>
+
+                    <div id=stats2>
+                        Gold: <span id="gold">0</span><br/>
+                        Scrolls: <span id="scroll">0</span> 
+                    </div>
+                </aside>
+            </div>
+
+            <footer>&copy; 2017 Scott Elcomb <a href="http://creativecommons.org/">CC-BY-SA</a><br/>a <a href="http://js13kgames.com">JS13K</a> 2017 entry</footer>
         </div>
 
-        <footer>&copy; 2017 Scott Elcomb <a href="http://creativecommons.org/">CC-BY-SA</a><br/>a <a href="http://js13kgames.com">JS13K</a> 2017 entry</footer>
+        <div id=died>
+            You died!<br/>
+            <button>Play Again?</button>
+        </div>
 
 
         <script src=msws.js></script>

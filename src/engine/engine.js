@@ -72,6 +72,7 @@ function Engine(opts) {
 
     if (typeof opts.debug != 'undefined') DEBUG = opts.debug;
     window.addEventListener('keydown', this.handleInputs);
+    _$('#died button').addEventListener('click', function() { window.location.reload(); });
     this.setSeed(seed);
 
     return this;
@@ -116,11 +117,14 @@ Engine.prototype.generateLayers = function() {
     // Create a layer of actors
     this.layers.push(new Layer({ id: LYR_ACTORS, W: this.width, H: this.height, N: this.numActors, T: Actor }));
     this.layers[LYR_ACTORS].generate(this.layers[LYR_FLOORSWALLS].map);
+
     this.actors = this.layers[LYR_ACTORS].things;
 }
 
 // handle inputs
 Engine.prototype.handleInputs = function(e) {
+    _$('#message').innerText = '';
+
     switch (e.which) {
         case KEY_W:
         case KEY_Z:
@@ -227,4 +231,18 @@ Engine.prototype.render = function() {
     stage.innerText = buf;
 
     return buf;
+}
+
+Engine.prototype.showScreen = function (screen) {
+    switch(screen) {
+        case 'game':
+            _$('#game').style.display = 'block';
+            _$('#died').style.display = 'none';
+            break;
+
+        case 'died':
+            _$('#game').style.display = 'none';
+            _$('#died').style.display = 'block';
+            break;
+    }
 }

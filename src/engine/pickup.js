@@ -15,7 +15,7 @@ function Pickup(opts) {
 }
 
 Pickup.prototype.getName = function(id) {
-    var names = [ 'Potion', 'Scroll', 'Sword', 'Gold' ]
+    var names = [ 'Potion', 'Scroll', 'Gold' ]
       , chance = prng.getInt(100, 1) - 1
       , selected
     ;
@@ -26,19 +26,16 @@ Pickup.prototype.getName = function(id) {
     } else if (chance < 70) {
         selected = 1;
 
-    } else if (chance < 90) {
-        selected = 2;
-
     } else {
-        selected = 3;
+        selected = 2;
     }
 
     return names[selected];
 }
 
 Pickup.prototype.trigger = function() {
-    console.log('Pickup %s: %s', this.id, this.name);
-    engine.layers[2].map[this.y][this.x] = ' ';
-    engine.player.addItem(this.name);
-    engine.pickups[this.id] = undefined;
+    if (engine.player.addItem(this.name)) {
+        engine.layers[2].map[this.y][this.x] = ' ';
+        engine.pickups[this.id] = undefined;
+    }
 }

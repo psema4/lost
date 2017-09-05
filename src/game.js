@@ -137,8 +137,13 @@ Door.prototype.getName = function(id) {
 }
 
 Door.prototype.trigger = function() {
-    console.log('teleporting from %s to %s', engine.seed, this.dest);
-    engine.setSeed(this.dest);
+    var dest = this.dest;
+
+    // prevent closure from restoring player glyph
+    setTimeout(function() {
+        console.log('teleporting from %s to %s', engine.seed, dest);
+        engine.setSeed(dest);
+    }, 0);
 }
 STATE_NORMAL = 0
 
@@ -157,7 +162,7 @@ function Pickup(opts) {
 }
 
 Pickup.prototype.getName = function(id) {
-    var names = [ 'Potion', 'Scroll', 'Sword', 'Gold' ]
+    var names = [ 'Potion', 'Scroll', 'Gold' ]
       , chance = prng.getInt(100, 1) - 1
       , selected
     ;
@@ -168,21 +173,18 @@ Pickup.prototype.getName = function(id) {
     } else if (chance < 70) {
         selected = 1;
 
-    } else if (chance < 90) {
-        selected = 2;
-
     } else {
-        selected = 3;
+        selected = 2;
     }
 
     return names[selected];
 }
 
 Pickup.prototype.trigger = function() {
-    console.log('Pickup %s: %s', this.id, this.name);
-    engine.layers[2].map[this.y][this.x] = ' ';
-    engine.player.addItem(this.name);
-    engine.pickups[this.id] = undefined;
+    if (engine.player.addItem(this.name)) {
+        engine.layers[2].map[this.y][this.x] = ' ';
+        engine.pickups[this.id] = undefined;
+    }
 }
 STATE_NORMAL = 0
 STATE_AGITATED = 1
@@ -214,21 +216,21 @@ function Actor(opts) {
 }
 
 Actor.prototype.agitate = function() {
-    if (this.id ==0) return;
+    if (this.id == 0) return;
 
     this.state = STATE_AGITATED;
     this.glyph = 'A';
-    engine.layers[layer].map[y][x] = this.glyph;
-    engine.layers[this.layer].render();
+    engine.layers[3].map[y][x] = this.glyph;
+    engine.layers[3].render();
 }
 
 Actor.prototype.calm = function() {
-    if (this.id ==0) return;
+    if (this.id == 0) return;
 
     this.state = STATE_NORMAL;
     this.glyph = 'a';
-    engine.layers[layer].map[y][x] = this.glyph;
-    engine.layers[this.layer].render();
+    engine.layers[3].map[y][x] = this.glyph;
+    engine.layers[3].render();
 }
 
 Actor.prototype.move = function(dx, dy, isPlayer) {
@@ -236,6 +238,10 @@ Actor.prototype.move = function(dx, dy, isPlayer) {
       , tx = this.x + dx
       , ty = this.y + dy
     ;
+
+    if (id == 0 && !isPlayer) {
+        return false;
+    }
 
     if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
         console.warn('WARN: actor movement range is out of range, got: %s, %s', dx, dy);
@@ -460,7 +466,11 @@ function Player(opts) {
     opts = opts || {};
 
     this.hp = opts.hp || 3;
-    this.inventory = [];
+    this.inventory = opts.inventory || [];
+
+    this.max_scroll = opts.maxScroll || 3;
+    this.max_potion = opts.maxPotion || 3;
+    this.max_gold = opts.maxGold || 10;
 
     return this;
 }
@@ -478,12 +488,49 @@ Player.prototype.hit = function(other) {
     _$('#hp').innerText = this.hp;
 }
 
+Player.prototype.canTake = function(item) {
+    var matches = []
+      , maxTarget = 'max_' + item.toLowerCase()
+      , max = this[maxTarget]
+    ;
+
+    matches = this.inventory.filter(function(invItem) {
+        return invItem == item;
+    });
+
+    if (!matches.length) {
+        return true;
+    }
+
+    if (max && matches.length < max) {
+        return true;
+    }
+
+    return false;
+}
+
 Player.prototype.addItem = function(item) {
-    this.inventory.push(item);
+    if (this.canTake(item)) {
+        var matches = [];
+
+        this.inventory.push(item);
+        _$('#message').innerText = 'You found a ' + item;
+
+        matches = this.inventory.filter(function(invItem) {
+            return invItem == item;
+        });
+
+        _$('#' + item.toLowerCase()).innerText = matches.length;
+        return true;
+
+    } else {
+        _$('#message').innerText = "Can't take " + item;
+        return false;
+    }
 }
 
 Player.prototype.die = function() {
-    console.log('player died');
+    engine.showScreen('died');
 }
 //FIXME: World map
 
@@ -559,6 +606,7 @@ function Engine(opts) {
 
     if (typeof opts.debug != 'undefined') DEBUG = opts.debug;
     window.addEventListener('keydown', this.handleInputs);
+    _$('#died button').addEventListener('click', function() { window.location.reload(); });
     this.setSeed(seed);
 
     return this;
@@ -572,13 +620,6 @@ Engine.prototype.setSeed = function(s) {
 }
 
 Engine.prototype.teardown = function() {
-/*
-    this.layers.forEach(function(layer) {
-        layer.map = undefined;
-        layer.thing = undefined;
-        layer.things = undefined;
-    });
-*/
     this.layers = [];
     this.doors = [];
     this.pickups = [];
@@ -610,11 +651,14 @@ Engine.prototype.generateLayers = function() {
     // Create a layer of actors
     this.layers.push(new Layer({ id: LYR_ACTORS, W: this.width, H: this.height, N: this.numActors, T: Actor }));
     this.layers[LYR_ACTORS].generate(this.layers[LYR_FLOORSWALLS].map);
+
     this.actors = this.layers[LYR_ACTORS].things;
 }
 
 // handle inputs
 Engine.prototype.handleInputs = function(e) {
+    _$('#message').innerText = '';
+
     switch (e.which) {
         case KEY_W:
         case KEY_Z:
@@ -721,6 +765,20 @@ Engine.prototype.render = function() {
     stage.innerText = buf;
 
     return buf;
+}
+
+Engine.prototype.showScreen = function (screen) {
+    switch(screen) {
+        case 'game':
+            _$('#game').style.display = 'block';
+            _$('#died').style.display = 'none';
+            break;
+
+        case 'died':
+            _$('#game').style.display = 'none';
+            _$('#died').style.display = 'block';
+            break;
+    }
 }
 function _$(sel) { return document.querySelector(sel); }
 

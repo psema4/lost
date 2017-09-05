@@ -18,7 +18,7 @@ body {
     border-radius: 7pt;
     background: #ccc;
     text-align: center;
-    flex: 3 1 60%;
+    flex: 3 1 50%;
     order: 2;
 }
 
@@ -43,6 +43,8 @@ body {
     color: #eee;
     flex: 1 6 20%;
     order: 3;
+
+    position: relative;
 }
  
 header, footer {
@@ -59,10 +61,26 @@ footer {
     font-size: 10px;
 }
 
-button {
+#game button {
     display: inline-block;
     width: 3em;
     height: 2em;
+}
+
+#stats1, #stats2 {
+    position: absolute;
+    top: 0px;
+}
+
+#died {
+    display: none;
+    color: #eee;
+    text-align: center;
+    line-height: 50vh;
+}
+
+#stats2 {
+    right: 0px;
 }
  
 /* Too narrow to support three columns */

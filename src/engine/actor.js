@@ -28,21 +28,21 @@ function Actor(opts) {
 }
 
 Actor.prototype.agitate = function() {
-    if (this.id ==0) return;
+    if (this.id == 0) return;
 
     this.state = STATE_AGITATED;
     this.glyph = 'A';
-    engine.layers[layer].map[y][x] = this.glyph;
-    engine.layers[this.layer].render();
+    engine.layers[3].map[y][x] = this.glyph;
+    engine.layers[3].render();
 }
 
 Actor.prototype.calm = function() {
-    if (this.id ==0) return;
+    if (this.id == 0) return;
 
     this.state = STATE_NORMAL;
     this.glyph = 'a';
-    engine.layers[layer].map[y][x] = this.glyph;
-    engine.layers[this.layer].render();
+    engine.layers[3].map[y][x] = this.glyph;
+    engine.layers[3].render();
 }
 
 Actor.prototype.move = function(dx, dy, isPlayer) {
@@ -50,6 +50,10 @@ Actor.prototype.move = function(dx, dy, isPlayer) {
       , tx = this.x + dx
       , ty = this.y + dy
     ;
+
+    if (id == 0 && !isPlayer) {
+        return false;
+    }
 
     if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
         console.warn('WARN: actor movement range is out of range, got: %s, %s', dx, dy);

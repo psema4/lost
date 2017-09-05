@@ -21,6 +21,11 @@ Door.prototype.getName = function(id) {
 }
 
 Door.prototype.trigger = function() {
-    console.log('teleporting from %s to %s', engine.seed, this.dest);
-    engine.setSeed(this.dest);
+    var dest = this.dest;
+
+    // prevent closure from restoring player glyph
+    setTimeout(function() {
+        console.log('teleporting from %s to %s', engine.seed, dest);
+        engine.setSeed(dest);
+    }, 0);
 }
