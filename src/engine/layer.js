@@ -82,7 +82,7 @@ Layer.prototype.generate = function(floorsAndWalls) {
                 x = prng.getInt(this.width-1, 0);
                 y = prng.getInt(this.height-1, 0);
 
-                if (floorsAndWalls[y][x] != '#') {
+                if (floorsAndWalls[y][x] != '#' && this.map[y][x] == ' ') {
                     this.things[t] = new this.thing({ layer: this.id, id: t, x: x, y: y });
 
                     var name = this.things[t].getName(t);
