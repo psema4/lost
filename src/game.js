@@ -703,6 +703,10 @@ function Engine(opts) {
     window.addEventListener('keydown', this.handleInputs);
     this.setSeed(seed);
 
+    this.player.updateGameUI();
+    this.player.updateInventoryUI();
+    _$('#room').innerText = 0;
+
     return this;
 }
 
