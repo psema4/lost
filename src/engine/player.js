@@ -118,6 +118,7 @@ Player.prototype.addHealth = function(hp) {
 }
 
 Player.prototype.die = function() {
+    _$('#died_in_room').innerText = _$('#room').innerText;
     engine.showScreen('died');
 }
 

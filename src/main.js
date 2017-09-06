@@ -1,6 +1,6 @@
 function _$(sel) { return document.querySelector(sel); }
 
-window.addEventListener('load', function() {
+function startNewGame(hasStarted) {
     window.engine = new Engine({
         W: 20
       , H: 10
@@ -18,4 +18,15 @@ window.addEventListener('load', function() {
     _$('#btn_rt').addEventListener('click', function() { engine.handleInputs({ which: 68 }); });
 
     engine.render();
-});
+
+
+    if (!!hasStarted) {
+        engine.showScreen('intro');
+
+    } else {
+        setTimeout(function() {
+            engine.showScreen('mainmenu');
+        }, 3000);
+    }
+}
+window.addEventListener('load', function() { startNewGame(false); });

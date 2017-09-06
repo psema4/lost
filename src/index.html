@@ -10,6 +10,20 @@
     </head>
 
     <body>
+        <div id=start class="screen">
+            Start
+        </div>
+
+        <div id=mainmenu class="screen">
+            Main Menu<br>
+            <button onclick="engine.showScreen('intro')">Play</button>
+        </div>
+
+        <div id=intro class="screen">
+            Once upon a time...<br/>
+            <button onclick="engine.showScreen('game')">Continue</button>
+        </div>
+
         <div id="game" class="screen">
             <header>
                 Lost<br/>
@@ -51,8 +65,8 @@
         </div>
 
         <div id=died class="screen">
-            You died!<br/>
-            <button>Play Again?</button>
+            You died in Room <span id=died_in_room>0</span><br/>
+            <button onclick="startNewGame(true)">Play Again?</button>
         </div>
 
 

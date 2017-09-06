@@ -79,6 +79,31 @@ footer {
     text-align: right;
 }
 
+#start {
+    display: block;
+    color: #eee;
+    text-align: center;
+    line-height: 100vh;
+}
+
+#mainmenu {
+    display: none;
+    color: #eee;
+    text-align: center;
+    line-height: 50vh;
+}
+
+#intro {
+    display: none;
+    color: #eee;
+    text-align: center;
+    line-height: 50vh;
+}
+
+#game {
+    display: none;
+}
+
 #inventory {
     display: none;
     color: #eee;

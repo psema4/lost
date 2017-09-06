@@ -69,10 +69,10 @@ function Engine(opts) {
     this.pickups = [];
     this.actors = [];
     this.player = new Player();
+    this.mode = 'start';
 
     if (typeof opts.debug != 'undefined') DEBUG = opts.debug;
     window.addEventListener('keydown', this.handleInputs);
-    _$('#died button').addEventListener('click', function() { window.location.reload(); });
     this.setSeed(seed);
 
     return this;
@@ -123,29 +123,32 @@ Engine.prototype.generateLayers = function() {
 
 // handle inputs
 Engine.prototype.handleInputs = function(e) {
-    _$('#message').innerText = '';
+    var isPlaying = engine.mode === 'game';
+
+    if (isPlaying)
+        _$('#message').innerText = '';
 
     switch (e.which) {
         case KEY_W:
         case KEY_Z:
         case KEY_UP:
-            engine.actors[0].move(0, -1, true);
+            if (isPlaying) engine.actors[0].move(0, -1, true);
             break;
 
         case KEY_A:
         case KEY_Q:
         case KEY_LEFT:
-            engine.actors[0].move(-1, 0, true);
+            if (isPlaying) engine.actors[0].move(-1, 0, true);
             break;
 
         case KEY_S:
         case KEY_DOWN:
-            engine.actors[0].move(0, 1, true);
+            if (isPlaying) engine.actors[0].move(0, 1, true);
             break;
 
         case KEY_D:
         case KEY_RIGHT:
-            engine.actors[0].move(1, 0, true);
+            if (isPlaying) engine.actors[0].move(1, 0, true);
             break;
 
         case KEY_SPACE:
@@ -159,8 +162,10 @@ Engine.prototype.handleInputs = function(e) {
         default:
     }
 
-    engine.render();
-    engine.aiTurn();
+    if (isPlaying) {
+        engine.render();
+        engine.aiTurn();
+    }
 }
 
 Engine.prototype.aiTurn = function() {
@@ -243,4 +248,5 @@ Engine.prototype.hideScreens = function() {
 Engine.prototype.showScreen = function (screen) {
     this.hideScreens();
     _$('#' + screen).style.display = 'block';
+    this.mode = screen;
 }
