@@ -10,7 +10,7 @@
     </head>
 
     <body>
-        <div id="game">
+        <div id="game" class="screen">
             <header>
                 Lost<br/>
                 <span id=message><span>
@@ -27,12 +27,13 @@
                 </nav>
 
                 <aside>
-                    <div id=stats1>
+                    <div>&nbsp;<br/>Room: <span id=room>0</span>
+                    <div id=stats1 onclick="engine.showScreen('inventory')">
                         HP: <span id=hp>3</span><br/>
                         Potions: <span id=potion>0</span>
                     </div>
 
-                    <div id=stats2>
+                    <div id=stats2 onclick="engine.showScreen('inventory')">
                         Gold: <span id="gold">0</span><br/>
                         Scrolls: <span id="scroll">0</span> 
                     </div>
@@ -42,7 +43,14 @@
             <footer>&copy; 2017 Scott Elcomb <a href="http://creativecommons.org/">CC-BY-SA</a><br/>a <a href="http://js13kgames.com">JS13K</a> 2017 entry</footer>
         </div>
 
-        <div id=died>
+        <div id=inventory class="screen">
+            Inventory
+            <ul id="items">
+            </ul>
+            <button onclick="engine.showScreen('game')">Close</button>
+        </div>
+
+        <div id=died class="screen">
             You died!<br/>
             <button>Play Again?</button>
         </div>

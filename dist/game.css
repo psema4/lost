@@ -45,6 +45,7 @@ body {
     order: 3;
 
     position: relative;
+    text-align: center;
 }
  
 header, footer {
@@ -70,6 +71,24 @@ footer {
 #stats1, #stats2 {
     position: absolute;
     top: 0px;
+    cursor: pointer;
+    text-align: left;
+}
+
+#stats2 {
+    text-align: right;
+}
+
+#inventory {
+    display: none;
+    color: #eee;
+    text-align: center;
+}
+
+#inventory ul {
+    text-align: left;
+    margin-left: 33%;
+    list-style: none;
 }
 
 #died {

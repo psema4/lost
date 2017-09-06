@@ -27,5 +27,8 @@ Door.prototype.trigger = function() {
     setTimeout(function() {
         console.log('teleporting from %s to %s', engine.seed, dest);
         engine.setSeed(dest);
+
+        var previousRoom = +_$('#room').innerText
+        _$('#room').innerText = (previousRoom + 1) + ''; 
     }, 0);
 }

@@ -233,16 +233,14 @@ Engine.prototype.render = function() {
     return buf;
 }
 
-Engine.prototype.showScreen = function (screen) {
-    switch(screen) {
-        case 'game':
-            _$('#game').style.display = 'block';
-            _$('#died').style.display = 'none';
-            break;
+Engine.prototype.hideScreens = function() {
+    var screens = document.querySelectorAll('.screen');
+    screens.forEach(function(screen) {
+        screen.style.display = 'none';
+    });
+}
 
-        case 'died':
-            _$('#game').style.display = 'none';
-            _$('#died').style.display = 'block';
-            break;
-    }
+Engine.prototype.showScreen = function (screen) {
+    this.hideScreens();
+    _$('#' + screen).style.display = 'block';
 }

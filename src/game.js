@@ -143,6 +143,9 @@ Door.prototype.trigger = function() {
     setTimeout(function() {
         console.log('teleporting from %s to %s', engine.seed, dest);
         engine.setSeed(dest);
+
+        var previousRoom = +_$('#room').innerText
+        _$('#room').innerText = (previousRoom + 1) + ''; 
     }, 0);
 }
 STATE_NORMAL = 0
@@ -434,7 +437,7 @@ Layer.prototype.generate = function(floorsAndWalls) {
                 x = prng.getInt(this.width-1, 0);
                 y = prng.getInt(this.height-1, 0);
 
-                if (floorsAndWalls[y][x] != '#') {
+                if (floorsAndWalls[y][x] != '#' && this.map[y][x] == ' ') {
                     this.things[t] = new this.thing({ layer: this.id, id: t, x: x, y: y });
 
                     var name = this.things[t].getName(t);
@@ -466,6 +469,7 @@ function Player(opts) {
     opts = opts || {};
 
     this.hp = opts.hp || 3;
+    this.hpMax = opts.hpMax || 3;
     this.inventory = opts.inventory || [];
 
     this.max_scroll = opts.maxScroll || 3;
@@ -509,28 +513,117 @@ Player.prototype.canTake = function(item) {
     return false;
 }
 
-Player.prototype.addItem = function(item) {
+Player.prototype.addItem = function(item, quiet) {
     if (this.canTake(item)) {
-        var matches = [];
+        ;
 
         this.inventory.push(item);
-        _$('#message').innerText = 'You found a ' + item;
 
-        matches = this.inventory.filter(function(invItem) {
-            return invItem == item;
-        });
+        if (!quiet)
+            _$('#message').innerText = 'You found a ' + item;
 
-        _$('#' + item.toLowerCase()).innerText = matches.length;
+        this.updateGameUI();
+        this.updateInventoryUI();
+
         return true;
 
     } else {
-        _$('#message').innerText = "Can't take " + item;
+        if (!quiet)
+            _$('#message').innerText = "Can't take " + item;
+
         return false;
     }
 }
 
+Player.prototype.updateGameUI = function() {
+    var matches = []
+      , items = [ 'Potion', 'Scroll', 'Gold' ]
+      , inventory = this.inventory
+    ;
+
+    items.forEach(function(item) {
+        matches = inventory.filter(function(invItem) {
+            return invItem == item;
+        });
+
+        _$('#' + item.toLowerCase()).innerText = matches.length;
+    });
+
+    _$('#hp').innerText = this.hp;
+}
+
+Player.prototype.updateInventoryUI = function() {
+    var inventoryItems = []
+      , inventoryItemKeys = []
+    ;
+
+    _$('#items').innerHTML = '';
+
+    this.inventory.forEach(function(invItem) {
+        if (typeof inventoryItems[invItem] === 'undefined') {
+            inventoryItems[invItem] = {
+                name: invItem
+              , count: 0
+            };
+        }
+
+        inventoryItems[invItem].count += 1;
+    });
+
+    inventoryItemKeys = Object.keys(inventoryItems);
+    inventoryItemKeys.forEach(function(key) {
+        var item = inventoryItems[key];
+        _$('#items').innerHTML += '<li>' + item.count + ' x <span onclick="engine.player.use(\'' + item.name + '\')">' + item.name + '</span></li>';
+    });
+}
+
+Player.prototype.addHealth = function(hp) {
+    this.hp += hp;
+
+    if (this.hp > this.hpMax)
+        this.hp = this.hpMax;
+}
+
 Player.prototype.die = function() {
     engine.showScreen('died');
+}
+
+Player.prototype.use = function(item) {
+    var found = -1;
+
+    this.inventory.forEach(function(invItem, idx) {
+        if (invItem.toLowerCase() === item.toLowerCase()) {
+            found = idx;
+        }
+    });
+
+    if (found > -1) {
+        var item = this.inventory.splice(found, 1)[0];
+        switch(item.toLowerCase()) {
+            case 'scroll':
+                _$('#message').innerText = 'You use a ' + item;
+                engine.actors.forEach(function(actor, idx) {
+                    if (idx == 0 || actor == undefined) return;
+                    actor.hit(engine.actors[0]);
+                });
+                engine.render();
+                break;
+
+            case 'potion':
+                _$('#message').innerText = 'You drink a ' + item;
+                this.addHealth(this.hpMax);
+                break;
+
+            case 'gold':
+            default:
+                _$('#message').innerText = "You can't use " + item + ' right now.';
+                this.addItem(item, true); // prevent default message
+        }
+    }
+
+    this.updateGameUI();
+    this.updateInventoryUI();
+    engine.showScreen('game');
 }
 //FIXME: World map
 
@@ -767,18 +860,16 @@ Engine.prototype.render = function() {
     return buf;
 }
 
-Engine.prototype.showScreen = function (screen) {
-    switch(screen) {
-        case 'game':
-            _$('#game').style.display = 'block';
-            _$('#died').style.display = 'none';
-            break;
+Engine.prototype.hideScreens = function() {
+    var screens = document.querySelectorAll('.screen');
+    screens.forEach(function(screen) {
+        screen.style.display = 'none';
+    });
+}
 
-        case 'died':
-            _$('#game').style.display = 'none';
-            _$('#died').style.display = 'block';
-            break;
-    }
+Engine.prototype.showScreen = function (screen) {
+    this.hideScreens();
+    _$('#' + screen).style.display = 'block';
 }
 function _$(sel) { return document.querySelector(sel); }
 
