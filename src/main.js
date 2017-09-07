@@ -9,6 +9,7 @@ function startNewGame(hasStarted) {
       , P: 3
       , debug: false
       , seed: 4242
+      , hasStarted: hasStarted
     });
 
 

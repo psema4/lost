@@ -626,47 +626,7 @@ Player.prototype.use = function(item) {
     this.updateInventoryUI();
     engine.showScreen('game');
 }
-//FIXME: World map
-
-/*
-    add one or more doors to LYR_FLOORSWALLS; upon landing on a door, generate layers based on the seed stored in the world cell
-
-    world[y][x] = seed
-
-    ie, given a world map:
-
-            1000 1001 1002 1003
-            1004 1005 1006 1007
-            1008 1009 1010 1011
-            1012 1013 1014 1015
-
-    and the current map (seed = 1000):
-
-            ####################
-            #A.#........#..A.A.#
-            #.....#.......#...A#
-            #......#......#....#
-            #........#.........#
-            #..................D
-            #..................#
-            ##........#....A.#.#
-            #.A....!......##...#
-            #.....#.#....#...###
-            #.A...#....#..#..#.#
-            #..#....##.#.......#
-            #.........#........#
-            #............#.....#
-            #.............A.#..#
-            #.......A........#.#
-            #...#....#...#.....#
-            #...##...#......#..#
-            #..#....A!...#!....#
-            #########D##########
-
-    then landing on the bottom door (D character) should cause the engine to generate a new map using the seed 1004, whereas landing
-    on the door to the right should cause the engine to generate a new map with the seed 1001.
-*/
-
+//TODO: World map: put doors on outer walls (solve 2-way travel)
 
 DEBUG = true;
 
@@ -685,6 +645,7 @@ KEY_ENTER = 13;
 
 function Engine(opts) {
     opts = opts || {};
+    var sprite;
 
     this.seed = opts.seed || 4242;
     this.width = opts.W || 10;
@@ -702,6 +663,22 @@ function Engine(opts) {
     if (typeof opts.debug != 'undefined') DEBUG = opts.debug;
     window.addEventListener('keydown', this.handleInputs);
     this.setSeed(seed);
+
+    // setup stage2d
+    if (!opts.hasStarted) {
+        for (var y=0; y<this.height; y++) {
+            for (var x=0; x<this.width; x++) {
+                sprite = document.createElement('span');
+                sprite.id = 'C' + y + '_' + x;
+                sprite.className = 'sprite';
+
+                sprite.style.top = y * 20 + 'px';
+                sprite.style.left = x * 15 + 'px';
+
+                _$('#stage2d').appendChild(sprite);
+            }
+        }
+    }
 
     this.player.updateGameUI();
     this.player.updateInventoryUI();
@@ -867,8 +844,9 @@ Engine.prototype.render = function() {
 
     stage.innerText = buf;
 
-    //FIXME: Quick-n-Dirty 2d render, way too slow (particularly on mobile); pre-generate rows & columns in constructor, update each cells' classes on render()
-    stage2d.innerHTML = '';
+    //FIXME: Quick-n-Dirty 2d render: split walls and floors into their own layers. always draw the floor layer for sprites' transparency to work properly
+    if (! _$('#C0_0')) return buf;
+
     var lines = buf.split(/\n/);
     for (var y=0; y<this.height; y++) {
         var line = lines[y]
@@ -878,6 +856,7 @@ Engine.prototype.render = function() {
         for (var x=0; x<this.width; x++) {
             var column = columns[x]
               , classNames = ''
+              , id = '#'
             ;
 
             switch(column) {
@@ -906,7 +885,8 @@ Engine.prototype.render = function() {
                     classNames = 'ground1';
             }
 
-            stage2d.innerHTML += '<span id="cell_' + y + '_' + x + '" class="sprite ' + classNames + '" style="top: ' + y*20 + 'px; left: ' + x*15 + 'px;"></span>';
+            id += 'C' + y + '_' + x;
+            _$(id).className='sprite ' + classNames;
         }
     }
 
@@ -936,6 +916,7 @@ function startNewGame(hasStarted) {
       , P: 3
       , debug: false
       , seed: 4242
+      , hasStarted: hasStarted
     });
 
 
