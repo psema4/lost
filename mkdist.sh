@@ -19,6 +19,10 @@ echo "minifying and compressing"
 echo "WARN: skipping css"
 uglifyjs src/game.js -cm > dist/game.min.js
 
+echo "building package"
+zip -r ~pkg dist
+ls -lh ~pkg.zip
+
 if [ "$1" == "--serve" ] || [ "$1" == "--server" ]; then
     echo "starting development server"
     cd dist
