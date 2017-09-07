@@ -2,6 +2,8 @@
 
 echo "copying files"
 cp src/index.min.html dist/index.html
+cp src/assets/lost.png dist/assets/lost.png
+cp src/sprites.css dist/sprites.css #FIXME: minify css
 cp src/game.css dist/game.css #FIXME: minify css
 cat src/msws.js             \
     src/prng.js             \

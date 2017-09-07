@@ -6,10 +6,15 @@
         <meta name=cache-control content="max-age=-1">
 
         <title>Lost</title>
+        <link rel=stylesheet href=sprites.css />
         <link rel=stylesheet href=game.css />
     </head>
 
     <body>
+        <div id=assets>
+            <img id=spritesheet src="assets/lost.png" width=300 height=80 />
+        </div>
+
         <div id=start class="screen">
             Start
         </div>
@@ -33,6 +38,7 @@
             <div id='main'>
                 <article>
                     <tt><pre id=stage></pre></tt>
+                    <div id=stage2d></div>
                 </article>
 
                 <nav>
@@ -68,7 +74,6 @@
             You died in Room <span id=died_in_room>0</span><br/>
             <button onclick="startNewGame(true)">Play Again?</button>
         </div>
-
 
         <script src=msws.js></script>
         <script src=prng.js></script>

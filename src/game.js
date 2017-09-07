@@ -867,6 +867,49 @@ Engine.prototype.render = function() {
 
     stage.innerText = buf;
 
+    //FIXME: Quick-n-Dirty 2d render, way too slow (particularly on mobile); pre-generate rows & columns in constructor, update each cells' classes on render()
+    stage2d.innerHTML = '';
+    var lines = buf.split(/\n/);
+    for (var y=0; y<this.height; y++) {
+        var line = lines[y]
+          , columns = line.split('')
+        ;
+
+        for (var x=0; x<this.width; x++) {
+            var column = columns[x]
+              , classNames = ''
+            ;
+
+            switch(column) {
+                case '.':
+                    classNames = 'ground0';
+                    break;
+
+                case '#':
+                    classNames = 'wall0';
+                    break;
+
+                case '@':
+                    classNames = 'actor0 up frame1';
+                    break;
+
+                case 'a':
+                    classNames = 'actor1 up frame1';
+                    break;
+
+                case 'p':
+                    classNames = 'pickup0';
+                    break;
+
+                case 'd':
+                default:
+                    classNames = 'ground1';
+            }
+
+            stage2d.innerHTML += '<span id="cell_' + y + '_' + x + '" class="sprite ' + classNames + '" style="top: ' + y*20 + 'px; left: ' + x*15 + 'px;"></span>';
+        }
+    }
+
     return buf;
 }
 
