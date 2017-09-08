@@ -106,7 +106,7 @@ Player.prototype.updateInventoryUI = function() {
     inventoryItemKeys = Object.keys(inventoryItems);
     inventoryItemKeys.forEach(function(key) {
         var item = inventoryItems[key];
-        _$('#items').innerHTML += '<li>' + item.count + ' x <span onclick="engine.player.use(\'' + item.name + '\')">' + item.name + '</span></li>';
+        _$('#items').innerHTML += '<li>' + item.count + ' x <button onclick="engine.player.use(\'' + item.name + '\')">' + item.name + '</button></li>';
     });
 }
 

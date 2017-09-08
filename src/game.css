@@ -105,7 +105,6 @@ footer {
     display: none;
 }
 
-/* FIXME: REMOVE WHEN 2D-READY */
 #game tt {
     display: none;
 }
@@ -141,6 +140,9 @@ footer {
 #stats2 {
     right: 0px;
 }
+
+button { padding: 0.5em; font-size: 2vh; border: 0px; background-color: #ccc; }
+button:hover, button.highlight { background-color: #fff; }
  
 /* Too narrow to support three columns */
 @media all and (max-width: 640px) {

@@ -114,6 +114,8 @@ window.setSeed = function(s) {
 }
 
 setSeed(4242);
+function _$(sel) { return document.querySelector(sel); }
+function _$$(sel) { return document.querySelectorAll(sel); }
 STATE_NORMAL = 0
 
 function Door(opts) {
@@ -573,7 +575,7 @@ Player.prototype.updateInventoryUI = function() {
     inventoryItemKeys = Object.keys(inventoryItems);
     inventoryItemKeys.forEach(function(key) {
         var item = inventoryItems[key];
-        _$('#items').innerHTML += '<li>' + item.count + ' x <span onclick="engine.player.use(\'' + item.name + '\')">' + item.name + '</span></li>';
+        _$('#items').innerHTML += '<li>' + item.count + ' x <button onclick="engine.player.use(\'' + item.name + '\')">' + item.name + '</button></li>';
     });
 }
 
@@ -659,6 +661,8 @@ function Engine(opts) {
     this.actors = [];
     this.player = new Player();
     this.mode = 'start';
+    this.menu = [];
+    this.menuSelection = 0;
 
     if (typeof opts.debug != 'undefined') DEBUG = opts.debug;
     window.addEventListener('keydown', this.handleInputs);
@@ -730,9 +734,15 @@ Engine.prototype.generateLayers = function() {
     this.actors = this.layers[LYR_ACTORS].things;
 }
 
+Engine.prototype.isMode = function(mode) {
+    return mode === this.mode;
+}
+
 // handle inputs
 Engine.prototype.handleInputs = function(e) {
-    var isPlaying = engine.mode === 'game';
+    var isPlaying = engine.mode === 'game'
+        isMenu = ['mainmenu', 'intro', 'inventory', 'died'].includes(engine.mode)
+    ;
 
     if (isPlaying)
         _$('#message').innerText = '';
@@ -742,30 +752,35 @@ Engine.prototype.handleInputs = function(e) {
         case KEY_Z:
         case KEY_UP:
             if (isPlaying) engine.actors[0].move(0, -1, true);
+            if (isMenu) engine.selectPrevious();
             break;
 
         case KEY_A:
         case KEY_Q:
         case KEY_LEFT:
             if (isPlaying) engine.actors[0].move(-1, 0, true);
+            if (isMenu) engine.selectPrevious();
             break;
 
         case KEY_S:
         case KEY_DOWN:
             if (isPlaying) engine.actors[0].move(0, 1, true);
+            if (isMenu) engine.selectNext();
             break;
 
         case KEY_D:
         case KEY_RIGHT:
             if (isPlaying) engine.actors[0].move(1, 0, true);
+            if (isMenu) engine.selectNext();
             break;
 
         case KEY_SPACE:
-            console.log('space');
+            //if (isPlaying) engine.showScreen('pause');
             break;
 
         case KEY_ENTER:
-            console.log('enter');
+            if (isPlaying) engine.showScreen('inventory');
+            if (isMenu) engine.activateSelected();
             break;
 
         default:
@@ -775,6 +790,44 @@ Engine.prototype.handleInputs = function(e) {
         engine.render();
         engine.aiTurn();
     }
+}
+
+Engine.prototype.selectPrevious = function() {
+    var buttons;
+
+    this.menuSelection -= 1;
+
+    if (this.menuSelection < 0)
+        this.menuSelection = this.menu.length - 1;
+
+    buttons = _$$('#' + engine.mode + ' button');
+    buttons.forEach(function(button) { button.classList.remove('highlight'); });
+
+    this.menu[this.menuSelection].classList.add('highlight');
+}
+
+Engine.prototype.selectNext = function() {
+    var buttons;
+
+    this.menuSelection += 1;
+
+    if (this.menuSelection >= this.menu.length)
+        this.menuSelection = 0;
+
+    buttons = _$$('#' + engine.mode + ' button');
+    buttons.forEach(function(button) { button.classList.remove('highlight'); });
+
+    this.menu[this.menuSelection].classList.add('highlight');
+}
+
+Engine.prototype.activateSelected = function() {
+    var el = this.menu[this.menuSelection]
+      , fn = el && el.getAttribute('onclick')
+    ;
+
+    //FIXME: hack, trigger event specified in buttons' onclick attribute
+    if (fn && typeof fn === 'string')
+        eval(fn);
 }
 
 Engine.prototype.aiTurn = function() {
@@ -894,7 +947,7 @@ Engine.prototype.render = function() {
 }
 
 Engine.prototype.hideScreens = function() {
-    var screens = document.querySelectorAll('.screen');
+    var screens = _$$('.screen');
     screens.forEach(function(screen) {
         screen.style.display = 'none';
     });
@@ -904,10 +957,16 @@ Engine.prototype.showScreen = function (screen) {
     this.hideScreens();
     _$('#' + screen).style.display = 'block';
     this.mode = screen;
-}
-function _$(sel) { return document.querySelector(sel); }
 
+    this.menu = _$$('#' + screen + ' button');
+    this.menuSelection = 0;
+
+    if (screen !== 'game')
+        this.menu[this.menuSelection].classList.add('highlight');
+}
 function startNewGame(hasStarted) {
+    setSeed(4242);
+
     window.engine = new Engine({
         W: 20
       , H: 10
@@ -919,14 +978,7 @@ function startNewGame(hasStarted) {
       , hasStarted: hasStarted
     });
 
-
-    _$('#btn_up').addEventListener('click', function() { engine.handleInputs({ which: 87 }); });
-    _$('#btn_lt').addEventListener('click', function() { engine.handleInputs({ which: 65 }); });
-    _$('#btn_dn').addEventListener('click', function() { engine.handleInputs({ which: 83 }); });
-    _$('#btn_rt').addEventListener('click', function() { engine.handleInputs({ which: 68 }); });
-
     engine.render();
-
 
     if (!!hasStarted) {
         engine.showScreen('intro');
@@ -937,4 +989,12 @@ function startNewGame(hasStarted) {
         }, 3000);
     }
 }
-window.addEventListener('load', function() { startNewGame(false); });
+
+window.addEventListener('load', function() {
+    _$('#btn_up').addEventListener('click', function() { engine.handleInputs({ which: 87 }); });
+    _$('#btn_lt').addEventListener('click', function() { engine.handleInputs({ which: 65 }); });
+    _$('#btn_dn').addEventListener('click', function() { engine.handleInputs({ which: 83 }); });
+    _$('#btn_rt').addEventListener('click', function() { engine.handleInputs({ which: 68 }); });
+
+    startNewGame(false);
+});
