@@ -2,10 +2,11 @@
 
 DEBUG = true;
 
-LYR_FLOORSWALLS = 0;
-LYR_DOORS = 1;
-LYR_PICKUPS = 2;
-LYR_ACTORS = 3;
+LYR_FLOORS = 0;
+LYR_WALLS = 1;
+LYR_DOORS = 2;
+LYR_PICKUPS = 3;
+LYR_ACTORS = 4;
 
 // alias Z to W, Q to A for AZERTY keyboards; see http://xem.github.io/articles/#jsgamesinputs
 KEY_W = 87; KEY_Z = 90; KEY_UP = 38;
@@ -80,13 +81,17 @@ Engine.prototype.generateLayers = function() {
         this.teardown();
     }
 
-    // Create a layer of floors and walls
-    this.layers.push(new Layer({ id: LYR_FLOORSWALLS, W: this.width, H: this.height }));
-    this.layers[LYR_FLOORSWALLS].generate();
+    // Create a layer for floors
+    this.layers.push(new Layer({ id: LYR_FLOORS, W: this.width, H: this.height, N: -1, T: Floor }));
+    this.layers[LYR_FLOORS].generate();
+
+    // Create a layer for walls
+    this.layers.push(new Layer({ id: LYR_WALLS, W: this.width, H: this.height, N: -1, P: 0.15, T: Wall, B: true }));
+    this.layers[LYR_WALLS].generate();
 
     // Create a layer for doors
     this.layers.push(new Layer({ id: LYR_DOORS, W: this.width, H: this.height, N: this.numDoors, T: Door }));
-    this.layers[LYR_DOORS].generate(this.layers[LYR_FLOORSWALLS].map);
+    this.layers[LYR_DOORS].generate(this.layers[LYR_WALLS].map);
     this.doors = this.layers[LYR_DOORS].things;
     this.doors.forEach(function(door) {
         door.dest = 4242 + prng.getInt(1000, 1);
@@ -94,12 +99,12 @@ Engine.prototype.generateLayers = function() {
 
     // Create a layer of pickups
     this.layers.push(new Layer({ id: LYR_PICKUPS, W: this.width, H: this.height, N: this.numPickups, T: Pickup }));
-    this.layers[LYR_PICKUPS].generate(this.layers[LYR_FLOORSWALLS].map);
+    this.layers[LYR_PICKUPS].generate(this.layers[LYR_WALLS].map);
     this.pickups = this.layers[LYR_PICKUPS].things;
     
     // Create a layer of actors
     this.layers.push(new Layer({ id: LYR_ACTORS, W: this.width, H: this.height, N: this.numActors, T: Actor }));
-    this.layers[LYR_ACTORS].generate(this.layers[LYR_FLOORSWALLS].map);
+    this.layers[LYR_ACTORS].generate(this.layers[LYR_WALLS].map);
 
     this.actors = this.layers[LYR_ACTORS].things;
 }
@@ -227,7 +232,11 @@ Engine.prototype.mergeLayers = function() {
 
     for (var y=0; y<this.height; y++) {
         for (var x=0; x<this.width; x++) {
-            tmpLayer.map[y][x] = this.layers[LYR_FLOORSWALLS].map[y][x];
+            tmpLayer.map[y][x] = this.layers[LYR_FLOORS].map[y][x];
+
+            var wall = this.layers[LYR_WALLS].map[y][x] === '#';
+            if (wall)
+                tmpLayer.map[y][x] = this.layers[LYR_WALLS].map[y][x];
 
             if (DEBUG) console.log('FW: tmpLayer.map[%s][%s]: "%s"', y, x, tmpLayer.map[y][x]); 
 

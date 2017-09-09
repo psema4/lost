@@ -6,6 +6,8 @@ function Layer(opts) {
     this.id = opts.id || this.uuid();
     this.thing = !!opts.T && opts.T || false;
     this.numThings = opts.N || 10;
+    this.probability = opts.P || 1;
+    this.border = opts.B || false;
     this.map = [];
     this.things = [];
 
@@ -48,32 +50,43 @@ Layer.prototype.from = function(src) {
     }
 }
 
-// When generating things, a floors-and-walls map (AoA) is required.
-Layer.prototype.generate = function(floorsAndWalls) {
+Layer.prototype.generate = function(walls) {
     var pending = x = y = p = a = 0;
 
-    if (!this.thing) {  // Floors and walls
+    if (typeof walls != 'object') {
+        walls = [];
         for (y=0; y<this.height; y++) {
-            for (x=0; x<this.width; x++) {
-                var glyph = '';
+            var row = [];
+            for (var x=0; x<this.width; x++) {
+                row.push(' ');
+            }
+            walls.push(row);
+        }
+    }
 
-                if (y == 0 || y == this.height-1 || x == 0 || x == this.width-1) {
-                    glyph = '#';
+    // floors, walls (and other things requiring "random" distribution; not implemented [check for walls])
+    if (this.numThings < 0) {
+        var t = 0;
 
-                } else {
-                    glyph = +prng.getFixed(2, 1, 0) > 0.75 ? '#' : '.';
+        for (y = 0; y < this.height; y++) {
+            for (x = 0; x < this.width; x++) {
+                var placeThing = (this.probability >= 1 || prng.random() < this.probability);
+
+                if (this.border && (y == 0 || y == this.height-1 || x == 0 || x == this.width-1))
+                    placeThing = true;
+
+                if (placeThing) {
+                    var thing = new this.thing({ layer: this.id, id: t, x: x, y: y });
+                    thing.name = thing.getName(t);
+                    this.map[y][x] = thing.glyph || '?';
+                    this.things.push(thing);
                 }
-
-                this.map[y][x] = glyph;
+                t += 1;
             }
         }
 
-    } else { // Things
-        if (typeof floorsAndWalls != 'object') {
-            console.warn('WARN: invalid floorsAndWalls map');
-            return false;
-        }
-
+    } else {
+        // when generating a specific number of things
         for (t=0; t<this.numThings; t++) {
             pending = true;
             x = y = 0;
@@ -82,7 +95,7 @@ Layer.prototype.generate = function(floorsAndWalls) {
                 x = prng.getInt(this.width-1, 0);
                 y = prng.getInt(this.height-1, 0);
 
-                if (floorsAndWalls[y][x] != '#' && this.map[y][x] == ' ') {
+                if (walls[y][x] != '#' && this.map[y][x] == ' ') {
                     this.things[t] = new this.thing({ layer: this.id, id: t, x: x, y: y });
 
                     var name = this.things[t].getName(t);

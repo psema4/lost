@@ -8,6 +8,8 @@ cp src/game.css dist/game.css #FIXME: minify css
 cat src/msws.js             \
     src/prng.js             \
     src/util.js             \
+    src/engine/floor.js     \
+    src/engine/wall.js      \
     src/engine/door.js      \
     src/engine/pickup.js    \
     src/engine/actor.js     \

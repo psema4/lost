@@ -118,6 +118,52 @@ function _$(sel) { return document.querySelector(sel); }
 function _$$(sel) { return document.querySelectorAll(sel); }
 STATE_NORMAL = 0
 
+function Floor(opts) {
+    opts = opts || {};
+
+    this.name = opts.name || 'FLOOR';
+    this.glyph = '.';
+    this.layer = opts.layer || 0;
+    this.id = opts.id || 0;
+    this.x = opts.x || 0;
+    this.y = opts.y || 0;
+    this.state = opts.state || STATE_NORMAL;
+
+    return this;
+}
+
+Floor.prototype.getName = function(id) {
+    var names = [ 'Floor' ]
+    return names[0];
+}
+
+Floor.prototype.trigger = function() {
+}
+STATE_NORMAL = 0
+
+function Wall(opts) {
+    opts = opts || {};
+
+    this.name = opts.name || 'WALL';
+    this.glyph = '#';
+    this.layer = opts.layer || 0;
+    this.id = opts.id || 0;
+    this.x = opts.x || 0;
+    this.y = opts.y || 0;
+    this.state = opts.state || STATE_NORMAL;
+
+    return this;
+}
+
+Wall.prototype.getName = function(id) {
+    var names = [ 'Wall' ]
+    return names[0];
+}
+
+Wall.prototype.trigger = function() {
+}
+STATE_NORMAL = 0
+
 function Door(opts) {
     opts = opts || {};
 
@@ -187,7 +233,7 @@ Pickup.prototype.getName = function(id) {
 
 Pickup.prototype.trigger = function() {
     if (engine.player.addItem(this.name)) {
-        engine.layers[2].map[this.y][this.x] = ' ';
+        engine.layers[3].map[this.y][this.x] = ' ';
         engine.pickups[this.id] = undefined;
     }
 }
@@ -225,8 +271,8 @@ Actor.prototype.agitate = function() {
 
     this.state = STATE_AGITATED;
     this.glyph = 'A';
-    engine.layers[3].map[y][x] = this.glyph;
-    engine.layers[3].render();
+    engine.layers[4].map[y][x] = this.glyph;
+    engine.layers[4].render();
 }
 
 Actor.prototype.calm = function() {
@@ -234,8 +280,8 @@ Actor.prototype.calm = function() {
 
     this.state = STATE_NORMAL;
     this.glyph = 'a';
-    engine.layers[3].map[y][x] = this.glyph;
-    engine.layers[3].render();
+    engine.layers[4].map[y][x] = this.glyph;
+    engine.layers[4].render();
 }
 
 Actor.prototype.move = function(dx, dy, isPlayer) {
@@ -258,10 +304,10 @@ Actor.prototype.move = function(dx, dy, isPlayer) {
     if (ty < 0) ty = 0;
     if (ty > engine.height) ty = engine.height;
 
-    var targetCell = engine.layers[0].map[ty][tx]
-      , d = engine.layers[1].map[ty][tx]
-      , p = engine.layers[2].map[ty][tx]
-      , a = engine.layers[3].map[ty][tx]
+    var targetCell = engine.layers[1].map[ty][tx]
+      , d = engine.layers[2].map[ty][tx]
+      , p = engine.layers[3].map[ty][tx]
+      , a = engine.layers[4].map[ty][tx]
     ;
 
     // Collisions
@@ -352,7 +398,7 @@ Actor.prototype.hit = function(other) {
 Actor.prototype.die = function() {
     console.log('actor %s died', this.id);
 
-    engine.layers[3].map[this.y][this.x] = ' ';
+    engine.layers[4].map[this.y][this.x] = ' ';
     engine.actors[this.id] = undefined;
 }
 function Layer(opts) {
@@ -363,6 +409,8 @@ function Layer(opts) {
     this.id = opts.id || this.uuid();
     this.thing = !!opts.T && opts.T || false;
     this.numThings = opts.N || 10;
+    this.probability = opts.P || 1;
+    this.border = opts.B || false;
     this.map = [];
     this.things = [];
 
@@ -405,32 +453,43 @@ Layer.prototype.from = function(src) {
     }
 }
 
-// When generating things, a floors-and-walls map (AoA) is required.
-Layer.prototype.generate = function(floorsAndWalls) {
+Layer.prototype.generate = function(walls) {
     var pending = x = y = p = a = 0;
 
-    if (!this.thing) {  // Floors and walls
+    if (typeof walls != 'object') {
+        walls = [];
         for (y=0; y<this.height; y++) {
-            for (x=0; x<this.width; x++) {
-                var glyph = '';
+            var row = [];
+            for (var x=0; x<this.width; x++) {
+                row.push(' ');
+            }
+            walls.push(row);
+        }
+    }
 
-                if (y == 0 || y == this.height-1 || x == 0 || x == this.width-1) {
-                    glyph = '#';
+    // floors, walls (and other things requiring "random" distribution; not implemented [check for walls])
+    if (this.numThings < 0) {
+        var t = 0;
 
-                } else {
-                    glyph = +prng.getFixed(2, 1, 0) > 0.75 ? '#' : '.';
+        for (y = 0; y < this.height; y++) {
+            for (x = 0; x < this.width; x++) {
+                var placeThing = (this.probability >= 1 || prng.random() < this.probability);
+
+                if (this.border && (y == 0 || y == this.height-1 || x == 0 || x == this.width-1))
+                    placeThing = true;
+
+                if (placeThing) {
+                    var thing = new this.thing({ layer: this.id, id: t, x: x, y: y });
+                    thing.name = thing.getName(t);
+                    this.map[y][x] = thing.glyph || '?';
+                    this.things.push(thing);
                 }
-
-                this.map[y][x] = glyph;
+                t += 1;
             }
         }
 
-    } else { // Things
-        if (typeof floorsAndWalls != 'object') {
-            console.warn('WARN: invalid floorsAndWalls map');
-            return false;
-        }
-
+    } else {
+        // when generating a specific number of things
         for (t=0; t<this.numThings; t++) {
             pending = true;
             x = y = 0;
@@ -439,7 +498,7 @@ Layer.prototype.generate = function(floorsAndWalls) {
                 x = prng.getInt(this.width-1, 0);
                 y = prng.getInt(this.height-1, 0);
 
-                if (floorsAndWalls[y][x] != '#' && this.map[y][x] == ' ') {
+                if (walls[y][x] != '#' && this.map[y][x] == ' ') {
                     this.things[t] = new this.thing({ layer: this.id, id: t, x: x, y: y });
 
                     var name = this.things[t].getName(t);
@@ -632,10 +691,11 @@ Player.prototype.use = function(item) {
 
 DEBUG = true;
 
-LYR_FLOORSWALLS = 0;
-LYR_DOORS = 1;
-LYR_PICKUPS = 2;
-LYR_ACTORS = 3;
+LYR_FLOORS = 0;
+LYR_WALLS = 1;
+LYR_DOORS = 2;
+LYR_PICKUPS = 3;
+LYR_ACTORS = 4;
 
 // alias Z to W, Q to A for AZERTY keyboards; see http://xem.github.io/articles/#jsgamesinputs
 KEY_W = 87; KEY_Z = 90; KEY_UP = 38;
@@ -710,13 +770,17 @@ Engine.prototype.generateLayers = function() {
         this.teardown();
     }
 
-    // Create a layer of floors and walls
-    this.layers.push(new Layer({ id: LYR_FLOORSWALLS, W: this.width, H: this.height }));
-    this.layers[LYR_FLOORSWALLS].generate();
+    // Create a layer for floors
+    this.layers.push(new Layer({ id: LYR_FLOORS, W: this.width, H: this.height, N: -1, T: Floor }));
+    this.layers[LYR_FLOORS].generate();
+
+    // Create a layer for walls
+    this.layers.push(new Layer({ id: LYR_WALLS, W: this.width, H: this.height, N: -1, P: 0.15, T: Wall, B: true }));
+    this.layers[LYR_WALLS].generate();
 
     // Create a layer for doors
     this.layers.push(new Layer({ id: LYR_DOORS, W: this.width, H: this.height, N: this.numDoors, T: Door }));
-    this.layers[LYR_DOORS].generate(this.layers[LYR_FLOORSWALLS].map);
+    this.layers[LYR_DOORS].generate(this.layers[LYR_WALLS].map);
     this.doors = this.layers[LYR_DOORS].things;
     this.doors.forEach(function(door) {
         door.dest = 4242 + prng.getInt(1000, 1);
@@ -724,12 +788,12 @@ Engine.prototype.generateLayers = function() {
 
     // Create a layer of pickups
     this.layers.push(new Layer({ id: LYR_PICKUPS, W: this.width, H: this.height, N: this.numPickups, T: Pickup }));
-    this.layers[LYR_PICKUPS].generate(this.layers[LYR_FLOORSWALLS].map);
+    this.layers[LYR_PICKUPS].generate(this.layers[LYR_WALLS].map);
     this.pickups = this.layers[LYR_PICKUPS].things;
     
     // Create a layer of actors
     this.layers.push(new Layer({ id: LYR_ACTORS, W: this.width, H: this.height, N: this.numActors, T: Actor }));
-    this.layers[LYR_ACTORS].generate(this.layers[LYR_FLOORSWALLS].map);
+    this.layers[LYR_ACTORS].generate(this.layers[LYR_WALLS].map);
 
     this.actors = this.layers[LYR_ACTORS].things;
 }
@@ -857,7 +921,11 @@ Engine.prototype.mergeLayers = function() {
 
     for (var y=0; y<this.height; y++) {
         for (var x=0; x<this.width; x++) {
-            tmpLayer.map[y][x] = this.layers[LYR_FLOORSWALLS].map[y][x];
+            tmpLayer.map[y][x] = this.layers[LYR_FLOORS].map[y][x];
+
+            var wall = this.layers[LYR_WALLS].map[y][x] === '#';
+            if (wall)
+                tmpLayer.map[y][x] = this.layers[LYR_WALLS].map[y][x];
 
             if (DEBUG) console.log('FW: tmpLayer.map[%s][%s]: "%s"', y, x, tmpLayer.map[y][x]); 
 
