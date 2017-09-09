@@ -469,7 +469,7 @@ Engine.prototype.dayNightCycle = function(state) {
 
 Engine.prototype.lightFlicker = function() {
     var v = Math.floor(Math.random() * 128)
-      , s = 1 + (Math.random() / 2)
+      , s = 1.25 + (v/128) * 0.25
       , next = Math.floor(Math.random() * 65) + 15
     ;
 
