@@ -5,17 +5,17 @@ cp src/index.min.html dist/index.html
 cp src/assets/lost.png dist/assets/lost.png
 cp src/sprites.css dist/sprites.css #FIXME: minify css
 cp src/game.css dist/game.css #FIXME: minify css
-cat src/msws.js             \
-    src/prng.js             \
-    src/util.js             \
-    src/engine/floor.js     \
-    src/engine/wall.js      \
-    src/engine/door.js      \
-    src/engine/pickup.js    \
-    src/engine/actor.js     \
-    src/engine/layer.js     \
-    src/engine/player.js    \
-    src/engine/engine.js    \
+cat src/msws.js                 \
+    src/prng.js                 \
+    src/util.js                 \
+    src/engine/things/floor.js  \
+    src/engine/things/wall.js   \
+    src/engine/things/door.js   \
+    src/engine/things/pickup.js \
+    src/engine/things/actor.js  \
+    src/engine/layer.js         \
+    src/engine/player.js        \
+    src/engine/engine.js        \
     src/main.js > src/game.js
 
 echo "minifying and compressing"
