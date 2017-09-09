@@ -9,6 +9,10 @@ function createEventsDeck(size) {
           , { id: 5, name: 'Magical Lightning', cb: scroll }
           , { id: 6, name: 'Sick', cb: sick }
           , { id: 7, name: 'Sick', cb: sick }
+          , { id: 8, name: 'Daytime', cb: daytime }
+          , { id: 9, name: 'Daytime', cb: daytime }
+          , { id: 10, name: 'Nighttime', cb: nighttime }
+          , { id: 11, name: 'Nighttime', cb: nighttime }
         ]
     ;
 
@@ -58,6 +62,14 @@ function createEventsDeck(size) {
             engine.player.hit();
             _$('#message').innerText = 'You don\'t feel well';
         }
+    }
+
+    function daytime() {
+        engine.dayNightCycle('day');
+    }
+
+    function nighttime() {
+        engine.dayNightCycle('night');
     }
 
     // Build the deck

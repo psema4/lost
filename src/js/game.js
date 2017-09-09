@@ -461,6 +461,10 @@ function createEventsDeck(size) {
           , { id: 5, name: 'Magical Lightning', cb: scroll }
           , { id: 6, name: 'Sick', cb: sick }
           , { id: 7, name: 'Sick', cb: sick }
+          , { id: 8, name: 'Daytime', cb: daytime }
+          , { id: 9, name: 'Daytime', cb: daytime }
+          , { id: 10, name: 'Nighttime', cb: nighttime }
+          , { id: 11, name: 'Nighttime', cb: nighttime }
         ]
     ;
 
@@ -510,6 +514,14 @@ function createEventsDeck(size) {
             engine.player.hit();
             _$('#message').innerText = 'You don\'t feel well';
         }
+    }
+
+    function daytime() {
+        engine.dayNightCycle('day');
+    }
+
+    function nighttime() {
+        engine.dayNightCycle('night');
     }
 
     // Build the deck
@@ -1262,6 +1274,38 @@ Engine.prototype.getDiscards = function(deck) {
 
     return discards;
 }
+
+Engine.prototype.dayNightCycle = function(state) {
+    // toggle if desired state not specified
+    if (!state)
+        state = _$('#lightmask').style.display == 'none' ? 'night' : 'day';
+
+    if (state == 'night') {
+        _$('#lightmask').style.display = 'inline-block';
+        _$('#light').style.display = 'inline-block';
+        this.lightFlicker();
+
+    } else {
+        _$('#lightmask').style.display = 'none';
+        _$('#light').style.display = 'none';
+    }
+}
+
+Engine.prototype.lightFlicker = function() {
+    var v = Math.floor(Math.random() * 128)
+      , s = 1 + (Math.random() / 2)
+      , next = Math.floor(Math.random() * 65) + 15
+    ;
+
+    // clamp scale
+    if (s > 1.5) s = 1.5;
+
+    _$('#light').style.backgroundColor = 'rgba(' + v + ', ' + v + ', 0, 0.5)';
+    _$('#lightmask').style.transform = 'scale(' + s + ')';
+
+    if (_$('#light').style.display != 'none')
+        setTimeout(engine.lightFlicker, next);
+}
 function startNewGame(hasStarted) {
     setSeed(4242);
 
@@ -1277,6 +1321,8 @@ function startNewGame(hasStarted) {
     });
 
     engine.render();
+    engine.centerView();
+    dayNightCycle();
 
     if (!!hasStarted) {
         engine.showScreen('intro');
@@ -1286,6 +1332,38 @@ function startNewGame(hasStarted) {
             engine.showScreen('mainmenu');
         }, 3000);
     }
+}
+
+function dayNightCycle(state) {
+    // toggle if desired state not specified
+    if (!state)
+        state = _$('#lightmask').style.display == 'none' ? 'night' : 'day';
+
+    if (state == 'night') {
+        _$('#lightmask').style.display = 'inline-block';
+        _$('#light').style.display = 'inline-block';
+        lightFlicker();
+
+    } else {
+        _$('#lightmask').style.display = 'none';
+        _$('#light').style.display = 'none';
+    }
+}
+
+function lightFlicker() {
+    var v = Math.floor(Math.random() * 128)
+      , s = 1 + (Math.random() / 2)
+      , next = Math.floor(Math.random() * 65) + 15
+    ;
+
+    // clamp scale
+    if (s > 1.5) s = 1.5;
+
+    _$('#light').style.backgroundColor = 'rgba(' + v + ', ' + v + ', 0, 0.5)';
+    _$('#lightmask').style.transform = 'scale(' + s + ')';
+
+    if (_$('#light').style.display != 'none')
+        setTimeout(lightFlicker, next);
 }
 
 window.addEventListener('load', function() {

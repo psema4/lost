@@ -121,6 +121,26 @@ footer {
     position: absolute;
     width: 600px;
     height: 400px;
+    transition: top 1s, left 1s;
+}
+
+#light, #lightmask {
+    display: none;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 300px;
+    height: 200px;
+}
+
+#light {
+    background-color: rgba(64, 64, 0, 0.5);
+    /*transition: background-color 0.05s;*/
+}
+
+#lightmask {
+    background-image: url(../assets/lost-lightmask.png);
+    transition: transform 0.15s;
 }
 
 #inventory {

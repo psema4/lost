@@ -13,6 +13,8 @@ function startNewGame(hasStarted) {
     });
 
     engine.render();
+    engine.centerView();
+    dayNightCycle();
 
     if (!!hasStarted) {
         engine.showScreen('intro');
@@ -22,6 +24,38 @@ function startNewGame(hasStarted) {
             engine.showScreen('mainmenu');
         }, 3000);
     }
+}
+
+function dayNightCycle(state) {
+    // toggle if desired state not specified
+    if (!state)
+        state = _$('#lightmask').style.display == 'none' ? 'night' : 'day';
+
+    if (state == 'night') {
+        _$('#lightmask').style.display = 'inline-block';
+        _$('#light').style.display = 'inline-block';
+        lightFlicker();
+
+    } else {
+        _$('#lightmask').style.display = 'none';
+        _$('#light').style.display = 'none';
+    }
+}
+
+function lightFlicker() {
+    var v = Math.floor(Math.random() * 128)
+      , s = 1 + (Math.random() / 2)
+      , next = Math.floor(Math.random() * 65) + 15
+    ;
+
+    // clamp scale
+    if (s > 1.5) s = 1.5;
+
+    _$('#light').style.backgroundColor = 'rgba(' + v + ', ' + v + ', 0, 0.5)';
+    _$('#lightmask').style.transform = 'scale(' + s + ')';
+
+    if (_$('#light').style.display != 'none')
+        setTimeout(lightFlicker, next);
 }
 
 window.addEventListener('load', function() {

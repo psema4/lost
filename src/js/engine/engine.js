@@ -450,3 +450,35 @@ Engine.prototype.getDiscards = function(deck) {
 
     return discards;
 }
+
+Engine.prototype.dayNightCycle = function(state) {
+    // toggle if desired state not specified
+    if (!state)
+        state = _$('#lightmask').style.display == 'none' ? 'night' : 'day';
+
+    if (state == 'night') {
+        _$('#lightmask').style.display = 'inline-block';
+        _$('#light').style.display = 'inline-block';
+        this.lightFlicker();
+
+    } else {
+        _$('#lightmask').style.display = 'none';
+        _$('#light').style.display = 'none';
+    }
+}
+
+Engine.prototype.lightFlicker = function() {
+    var v = Math.floor(Math.random() * 128)
+      , s = 1 + (Math.random() / 2)
+      , next = Math.floor(Math.random() * 65) + 15
+    ;
+
+    // clamp scale
+    if (s > 1.5) s = 1.5;
+
+    _$('#light').style.backgroundColor = 'rgba(' + v + ', ' + v + ', 0, 0.5)';
+    _$('#lightmask').style.transform = 'scale(' + s + ')';
+
+    if (_$('#light').style.display != 'none')
+        setTimeout(engine.lightFlicker, next);
+}
