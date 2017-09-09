@@ -14,5 +14,8 @@ KEY_D = 68; KEY_RIGHT =  39;
 KEY_SPACE = 32;
 KEY_ENTER = 13;
 
+DECK_EVENTS = 0;
+DECK_EVENTS_DISCARDS = 1;
+
 function _$(sel) { return document.querySelector(sel); }
 function _$$(sel) { return document.querySelectorAll(sel); }

@@ -10,6 +10,8 @@ function Floor(opts) {
     this.x = opts.x || 0;
     this.y = opts.y || 0;
     this.state = opts.state || STATE_NORMAL;
+    this.eventCell = prng.random() < 0.125;
+    this.hasFired = false;
 
     return this;
 }
@@ -19,5 +21,9 @@ Floor.prototype.getName = function(id) {
     return names[0];
 }
 
-Floor.prototype.trigger = function() {
+Floor.prototype.trigger = function(other) {
+    if (this.eventCell && !this.hasFired) {
+        engine.drawCard(DECK_EVENTS);
+        this.hasFired = true;
+    }
 }

@@ -7,6 +7,8 @@ function Engine(opts) {
     this.menuSelection = 0;
 
     this.layers  = [];
+    this.floors  = [];
+    this.walls   = [];
     this.doors   = [];
     this.pickups = [];
     this.actors  = [];
@@ -20,6 +22,8 @@ function Engine(opts) {
     this.numActors  = opts.A || 10;
 
     this.renderMode = '2d';
+
+    this.cardDecks = [];
 
     if (typeof opts.debug != 'undefined') DEBUG = opts.debug;
     window.addEventListener('keydown', this.handleInputs);
@@ -58,6 +62,11 @@ function Engine(opts) {
     this.player.updateInventoryUI();
     _$('#room').innerText = 0;
 
+    // create event cards
+    this.cardDecks[DECK_EVENTS] = createEventsDeck(10);
+    this.shuffleDeck(DECK_EVENTS);
+    this.cardDecks[DECK_EVENTS_DISCARDS] = [];
+
     return this;
 }
 
@@ -69,7 +78,10 @@ Engine.prototype.setSeed = function(s) {
 }
 
 Engine.prototype.teardown = function() {
+    // stub: remove event listeners from layers and things here
     this.layers = [];
+    this.floors = [];
+    this.walls = [];
     this.doors = [];
     this.pickups = [];
     this.actors = [];
@@ -83,10 +95,12 @@ Engine.prototype.generateLayers = function() {
     // Create a layer for floors
     this.layers.push(new Layer({ id: LYR_FLOORS, W: this.width, H: this.height, N: -1, T: Floor }));
     this.layers[LYR_FLOORS].generate();
+    this.floors = this.layers[LYR_FLOORS].things;
 
     // Create a layer for walls
     this.layers.push(new Layer({ id: LYR_WALLS, W: this.width, H: this.height, N: -1, P: 0.15, T: Wall, B: true }));
     this.layers[LYR_WALLS].generate();
+    this.walls = this.layers[LYR_WALLS].things;
 
     // Create a layer for doors
     this.layers.push(new Layer({ id: LYR_DOORS, W: this.width, H: this.height, N: this.numDoors, T: Door }));
@@ -375,4 +389,51 @@ Engine.prototype.showScreen = function (screen) {
 
     if (screen !== 'game')
         this.menu[this.menuSelection].classList.add('highlight');
+}
+
+Engine.prototype.shuffleDeck = function(deck) {
+    var numShuffles = Math.floor(Math.random() * 5) + 5
+      , tmp = []
+    ;
+
+    for (var i = 0; i < numShuffles; i++) {
+        while (this.cardDecks[deck].length > 0) {
+            var idx = Math.floor(Math.random() * this.cardDecks[deck].length);
+            tmp.push( this.cardDecks[deck].splice(idx, 1)[0] );
+        }
+    }
+
+    this.cardDecks[deck] = tmp;
+}
+
+Engine.prototype.drawCard = function(deck) {
+    var card = this.cardDecks[deck].shift()
+      , discards = this.getDiscards(deck)
+    ;
+
+    card.play();
+    card.discard();
+    this.cardDecks[discards].push(card);
+
+    // re-shuffle discards if there are no more cards in the deck
+    if (this.cardDecks[deck].length < 1) {
+        while (this.cardDecks[discards].length > 0) {
+            this.cardDecks[deck].push( this.cardDecks[discards].pop() );
+        }
+    }
+}
+
+Engine.prototype.getDiscards = function(deck) {
+    var discards = false;
+
+    switch (deck) {
+        case DECK_EVENTS:
+            discards = DECK_EVENTS_DISCARDS;
+            break;
+
+        default:
+            console.warn('WARN: Deck %s not found');
+    }
+
+    return discards;
 }

@@ -13,6 +13,8 @@ cat src/msws.js                 \
     src/engine/things/door.js   \
     src/engine/things/pickup.js \
     src/engine/things/actor.js  \
+    src/engine/cards/card.js    \
+    src/engine/cards/events.js  \
     src/engine/layer.js         \
     src/engine/player.js        \
     src/engine/engine.js        \

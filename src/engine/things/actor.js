@@ -65,7 +65,8 @@ Actor.prototype.move = function(dx, dy, isPlayer) {
     if (ty < 0) ty = 0;
     if (ty > engine.height) ty = engine.height;
 
-    var targetCell = engine.layers[LYR_WALLS].map[ty][tx]
+    var f = engine.layers[LYR_FLOORS].map[ty][tx]
+      , w = engine.layers[LYR_WALLS].map[ty][tx]
       , d = engine.layers[LYR_DOORS].map[ty][tx]
       , p = engine.layers[LYR_PICKUPS].map[ty][tx]
       , a = engine.layers[LYR_ACTORS].map[ty][tx]
@@ -73,6 +74,14 @@ Actor.prototype.move = function(dx, dy, isPlayer) {
 
     // Collisions
     if (isPlayer) {
+        if (f.toLowerCase() == '.') {
+            engine.floors.forEach(function(floor) {
+                if (ty == floor.y && tx == floor.x) {
+                    floor.trigger(this);
+                }
+            });
+        }
+
         if (d.toLowerCase() == 'd') {
             engine.doors.forEach(function(door) {
                 if (ty == door.y && tx == door.x) {
@@ -120,7 +129,7 @@ Actor.prototype.move = function(dx, dy, isPlayer) {
         }
     }
 
-    if (targetCell != '#') {
+    if (w != '#') {
         engine.layers[this.layer].map[this.y][this.x] = ' ';
         this.x = tx;
         this.y = ty;
@@ -143,9 +152,7 @@ Actor.prototype.getName = function(id) {
 }
 
 Actor.prototype.hit = function(other) {
-    if (other.engine) other = engine.actors[0];
-
-    console.log('actor %s hit actor %s', other.id, this.id);
+    console.log('actor %s hit actor %s', other && other.id, this.id);
 
     this.hp -= 1;
 

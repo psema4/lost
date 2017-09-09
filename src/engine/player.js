@@ -13,7 +13,7 @@ function Player(opts) {
 }
 
 Player.prototype.hit = function(other) {
-    console.log('actor %s hit player', other.id);
+    console.log('actor %s hit player', other && other.id);
 
     this.hp -= 1;
 
@@ -22,7 +22,7 @@ Player.prototype.hit = function(other) {
         this.die();
     }
 
-    _$('#hp').innerText = this.hp;
+    this.updateGameUI();
 }
 
 Player.prototype.canTake = function(item) {
@@ -115,6 +115,8 @@ Player.prototype.addHealth = function(hp) {
 
     if (this.hp > this.hpMax)
         this.hp = this.hpMax;
+
+    this.updateGameUI();
 }
 
 Player.prototype.die = function() {

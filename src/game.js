@@ -130,6 +130,9 @@ KEY_D = 68; KEY_RIGHT =  39;
 KEY_SPACE = 32;
 KEY_ENTER = 13;
 
+DECK_EVENTS = 0;
+DECK_EVENTS_DISCARDS = 1;
+
 function _$(sel) { return document.querySelector(sel); }
 function _$$(sel) { return document.querySelectorAll(sel); }
 STATE_NORMAL = 0
@@ -144,6 +147,8 @@ function Floor(opts) {
     this.x = opts.x || 0;
     this.y = opts.y || 0;
     this.state = opts.state || STATE_NORMAL;
+    this.eventCell = prng.random() < 0.125;
+    this.hasFired = false;
 
     return this;
 }
@@ -153,7 +158,11 @@ Floor.prototype.getName = function(id) {
     return names[0];
 }
 
-Floor.prototype.trigger = function() {
+Floor.prototype.trigger = function(other) {
+    if (this.eventCell && !this.hasFired) {
+        engine.drawCard(DECK_EVENTS);
+        this.hasFired = true;
+    }
 }
 STATE_NORMAL = 0
 
@@ -320,7 +329,8 @@ Actor.prototype.move = function(dx, dy, isPlayer) {
     if (ty < 0) ty = 0;
     if (ty > engine.height) ty = engine.height;
 
-    var targetCell = engine.layers[LYR_WALLS].map[ty][tx]
+    var f = engine.layers[LYR_FLOORS].map[ty][tx]
+      , w = engine.layers[LYR_WALLS].map[ty][tx]
       , d = engine.layers[LYR_DOORS].map[ty][tx]
       , p = engine.layers[LYR_PICKUPS].map[ty][tx]
       , a = engine.layers[LYR_ACTORS].map[ty][tx]
@@ -328,6 +338,14 @@ Actor.prototype.move = function(dx, dy, isPlayer) {
 
     // Collisions
     if (isPlayer) {
+        if (f.toLowerCase() == '.') {
+            engine.floors.forEach(function(floor) {
+                if (ty == floor.y && tx == floor.x) {
+                    floor.trigger(this);
+                }
+            });
+        }
+
         if (d.toLowerCase() == 'd') {
             engine.doors.forEach(function(door) {
                 if (ty == door.y && tx == door.x) {
@@ -375,7 +393,7 @@ Actor.prototype.move = function(dx, dy, isPlayer) {
         }
     }
 
-    if (targetCell != '#') {
+    if (w != '#') {
         engine.layers[this.layer].map[this.y][this.x] = ' ';
         this.x = tx;
         this.y = ty;
@@ -398,9 +416,7 @@ Actor.prototype.getName = function(id) {
 }
 
 Actor.prototype.hit = function(other) {
-    if (other.engine) other = engine.actors[0];
-
-    console.log('actor %s hit actor %s', other.id, this.id);
+    console.log('actor %s hit actor %s', other && other.id, this.id);
 
     this.hp -= 1;
 
@@ -416,6 +432,96 @@ Actor.prototype.die = function() {
 
     engine.layers[LYR_ACTORS].map[this.y][this.x] = ' ';
     engine.actors[this.id] = undefined;
+}
+function Card(opts) {
+    opts = opts || {};
+
+    this.id = opts.id || 0;
+    this.name = opts.name || 'CARD';
+    this.cb = opts.cb || function() {};
+
+    return this;
+}
+
+Card.prototype.play = function() {
+    console.log('Card played: %s', this.name);
+    this.cb();
+}
+
+Card.prototype.discard = function() {
+}
+function createEventsDeck(size) {
+    var deck = []
+      , cards = [
+            { id: 0, name: 'Restore', cb: potion }
+          , { id: 1, name: 'Refresh', cb: potion1 }
+          , { id: 2, name: 'Refresh', cb: potion1 }
+          , { id: 3, name: 'Lightning Strike', cb: scroll1 }
+          , { id: 4, name: 'Lightning Strike', cb: scroll1 }
+          , { id: 5, name: 'Magical Lightning', cb: scroll }
+          , { id: 6, name: 'Sick', cb: sick }
+          , { id: 7, name: 'Sick', cb: sick }
+        ]
+    ;
+
+    // Equivalent to using a potion
+    function potion() {
+        engine.player.addHealth(engine.player.hpMax);
+        _$('#message').innerText = 'You feel restored!';
+    }
+
+    // Same as potion, but only restores a single hit point
+    function potion1() {
+        engine.player.addHealth(1);
+        _$('#message').innerText = 'You feel refreshed!';
+    }
+
+    // Equivalent to using a scroll
+    function scroll() {
+        engine.actors.forEach(function(actor) {
+            if (actor) {
+                if (actor.id == 0) return;
+                actor.hit();
+            }
+        });
+        _$('#message').innerText = 'Magical lightning strike!';
+    }
+
+    // Similar to scroll, but only affects one actor
+    function scroll1() {
+        var idx = 0
+          , actor = false
+        ;
+
+        while (! actor) {
+            idx = Math.floor(Math.random() * engine.actors.length)
+            actor = engine.actors[idx]
+        }
+
+        if (idx != 0)
+            actor.hit();
+
+        _$('#message').innerText = 'Lightning Strike!';
+    }
+
+    // Won't kill player but will weaken
+    function sick() {
+        if (engine.player.hp > 1) {
+            engine.player.hit();
+            _$('#message').innerText = 'You don\'t fell well';
+        }
+    }
+
+    // Build the deck
+    for (var i = 0; i < size; i++) {
+        var selected = Math.floor(Math.random() * cards.length)
+          , card = new Card(cards[selected])
+        ;
+
+        deck.push(card);
+    }
+
+    return deck;
 }
 function Layer(opts) {
     opts = opts || {};
@@ -557,7 +663,7 @@ function Player(opts) {
 }
 
 Player.prototype.hit = function(other) {
-    console.log('actor %s hit player', other.id);
+    console.log('actor %s hit player', other && other.id);
 
     this.hp -= 1;
 
@@ -566,7 +672,7 @@ Player.prototype.hit = function(other) {
         this.die();
     }
 
-    _$('#hp').innerText = this.hp;
+    this.updateGameUI();
 }
 
 Player.prototype.canTake = function(item) {
@@ -659,6 +765,8 @@ Player.prototype.addHealth = function(hp) {
 
     if (this.hp > this.hpMax)
         this.hp = this.hpMax;
+
+    this.updateGameUI();
 }
 
 Player.prototype.die = function() {
@@ -712,6 +820,8 @@ function Engine(opts) {
     this.menuSelection = 0;
 
     this.layers  = [];
+    this.floors  = [];
+    this.walls   = [];
     this.doors   = [];
     this.pickups = [];
     this.actors  = [];
@@ -725,6 +835,8 @@ function Engine(opts) {
     this.numActors  = opts.A || 10;
 
     this.renderMode = '2d';
+
+    this.cardDecks = [];
 
     if (typeof opts.debug != 'undefined') DEBUG = opts.debug;
     window.addEventListener('keydown', this.handleInputs);
@@ -763,6 +875,11 @@ function Engine(opts) {
     this.player.updateInventoryUI();
     _$('#room').innerText = 0;
 
+    // create event cards
+    this.cardDecks[DECK_EVENTS] = createEventsDeck(10);
+    this.shuffleDeck(DECK_EVENTS);
+    this.cardDecks[DECK_EVENTS_DISCARDS] = [];
+
     return this;
 }
 
@@ -774,7 +891,10 @@ Engine.prototype.setSeed = function(s) {
 }
 
 Engine.prototype.teardown = function() {
+    // stub: remove event listeners from layers and things here
     this.layers = [];
+    this.floors = [];
+    this.walls = [];
     this.doors = [];
     this.pickups = [];
     this.actors = [];
@@ -788,10 +908,12 @@ Engine.prototype.generateLayers = function() {
     // Create a layer for floors
     this.layers.push(new Layer({ id: LYR_FLOORS, W: this.width, H: this.height, N: -1, T: Floor }));
     this.layers[LYR_FLOORS].generate();
+    this.floors = this.layers[LYR_FLOORS].things;
 
     // Create a layer for walls
     this.layers.push(new Layer({ id: LYR_WALLS, W: this.width, H: this.height, N: -1, P: 0.15, T: Wall, B: true }));
     this.layers[LYR_WALLS].generate();
+    this.walls = this.layers[LYR_WALLS].things;
 
     // Create a layer for doors
     this.layers.push(new Layer({ id: LYR_DOORS, W: this.width, H: this.height, N: this.numDoors, T: Door }));
@@ -1080,6 +1202,53 @@ Engine.prototype.showScreen = function (screen) {
 
     if (screen !== 'game')
         this.menu[this.menuSelection].classList.add('highlight');
+}
+
+Engine.prototype.shuffleDeck = function(deck) {
+    var numShuffles = Math.floor(Math.random() * 5) + 5
+      , tmp = []
+    ;
+
+    for (var i = 0; i < numShuffles; i++) {
+        while (this.cardDecks[deck].length > 0) {
+            var idx = Math.floor(Math.random() * this.cardDecks[deck].length);
+            tmp.push( this.cardDecks[deck].splice(idx, 1)[0] );
+        }
+    }
+
+    this.cardDecks[deck] = tmp;
+}
+
+Engine.prototype.drawCard = function(deck) {
+    var card = this.cardDecks[deck].shift()
+      , discards = this.getDiscards(deck)
+    ;
+
+    card.play();
+    card.discard();
+    this.cardDecks[discards].push(card);
+
+    // re-shuffle discards if there are no more cards in the deck
+    if (this.cardDecks[deck].length < 1) {
+        while (this.cardDecks[discards].length > 0) {
+            this.cardDecks[deck].push( this.cardDecks[discards].pop() );
+        }
+    }
+}
+
+Engine.prototype.getDiscards = function(deck) {
+    var discards = false;
+
+    switch (deck) {
+        case DECK_EVENTS:
+            discards = DECK_EVENTS_DISCARDS;
+            break;
+
+        default:
+            console.warn('WARN: Deck %s not found');
+    }
+
+    return discards;
 }
 function startNewGame(hasStarted) {
     setSeed(4242);
