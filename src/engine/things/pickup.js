@@ -35,7 +35,7 @@ Pickup.prototype.getName = function(id) {
 
 Pickup.prototype.trigger = function() {
     if (engine.player.addItem(this.name)) {
-        engine.layers[3].map[this.y][this.x] = ' ';
+        engine.layers[LYR_PICKUPS].map[this.y][this.x] = ' ';
         engine.pickups[this.id] = undefined;
     }
 }

@@ -2,20 +2,24 @@ function Engine(opts) {
     opts = opts || {};
     var sprite;
 
-    this.seed = opts.seed || 4242;
-    this.width = opts.W || 10;
-    this.height = opts.H || 10;
-    this.numDoors = opts.D || 1;
-    this.numPickups = opts.P || 3;
-    this.numActors = opts.A || 10;
-    this.layers = [];
-    this.doors = [];
-    this.pickups = [];
-    this.actors = [];
-    this.player = new Player();
     this.mode = 'start';
     this.menu = [];
     this.menuSelection = 0;
+
+    this.layers  = [];
+    this.doors   = [];
+    this.pickups = [];
+    this.actors  = [];
+    this.player  = new Player();
+
+    this.seed       = opts.seed || 4242;
+    this.width      = opts.W || 10;
+    this.height     = opts.H || 10;
+    this.numDoors   = opts.D || 1;
+    this.numPickups = opts.P || 3;
+    this.numActors  = opts.A || 10;
+
+    this.renderMode = '2d';
 
     if (typeof opts.debug != 'undefined') DEBUG = opts.debug;
     window.addEventListener('keydown', this.handleInputs);
@@ -23,6 +27,19 @@ function Engine(opts) {
 
     // setup stage2d
     if (!opts.hasStarted) {
+        for (var y=0; y<this.height; y++) {
+            for (var x=0; x<this.width; x++) {
+                sprite = document.createElement('span');
+                sprite.id = 'B' + y + '_' + x;
+                sprite.className = 'sprite';
+
+                sprite.style.top = y * 20 + 'px';
+                sprite.style.left = x * 15 + 'px';
+
+                _$('#stage2d').appendChild(sprite);
+            }
+        }
+
         for (var y=0; y<this.height; y++) {
             for (var x=0; x<this.width; x++) {
                 sprite = document.createElement('span');
@@ -208,13 +225,14 @@ Engine.prototype.aiTurn = function() {
 Engine.prototype.mergeLayers = function() {
     var tmpLayer = new Layer({ W: this.width, H: this.height })
       , buf = ''
+      , result
     ;
 
     if (DEBUG) console.groupCollapsed('mergeLayer');
 
     for (var y=0; y<this.height; y++) {
         for (var x=0; x<this.width; x++) {
-            tmpLayer.map[y][x] = this.layers[LYR_FLOORS].map[y][x];
+//            tmpLayer.map[y][x] = this.layers[LYR_FLOORS].map[y][x];
 
             var wall = this.layers[LYR_WALLS].map[y][x] === '#';
             if (wall)
@@ -243,12 +261,43 @@ Engine.prototype.mergeLayers = function() {
 
     if (DEBUG) console.groupEnd();
 
-    return buf;
+    switch (this.renderMode) {
+        case '2d':
+            result = [ this.layers[LYR_FLOORS].render(), buf ];
+            break;
+
+        case 'ascii':
+        case 'classic':
+        case 'enhanced':
+        default:
+            result = buf;
+    }
+
+    return result;
 }
 
 // post-processing and final render
 Engine.prototype.render = function() {
-    var buf = this.mergeLayers();
+    var floors
+      , buf
+    ;
+
+    if (this.renderMode === '2d') {
+        var mergeParts = this.mergeLayers();
+        floors = mergeParts[0];
+        buf = mergeParts[1];
+
+        if (_$('#B0_0')) {
+            for (var y = 0; y < this.height; y++) {
+                for (var x = 0; x < this.width; x++) {
+                    _$('#B' + y + '_' + x).className = "sprite ground0";
+                }
+            }
+        }
+
+    } else {
+        buf = this.mergeLayers();
+    }
 
     if (DEBUG) {
         console.groupCollapsed('render');
@@ -258,7 +307,6 @@ Engine.prototype.render = function() {
 
     stage.innerText = buf;
 
-    //FIXME: Quick-n-Dirty 2d render: split walls and floors into their own layers. always draw the floor layer for sprites' transparency to work properly
     if (! _$('#C0_0')) return buf;
 
     var lines = buf.split(/\n/);
@@ -295,8 +343,11 @@ Engine.prototype.render = function() {
                     break;
 
                 case 'd':
-                default:
                     classNames = 'ground1';
+                    break;
+
+                default:
+                    classNames = '';
             }
 
             id += 'C' + y + '_' + x;

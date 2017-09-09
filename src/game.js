@@ -114,6 +114,22 @@ window.setSeed = function(s) {
 }
 
 setSeed(4242);
+DEBUG = true;
+
+LYR_FLOORS = 0;
+LYR_WALLS = 1;
+LYR_DOORS = 2;
+LYR_PICKUPS = 3;
+LYR_ACTORS = 4;
+
+// alias Z to W, Q to A for AZERTY keyboards; see http://xem.github.io/articles/#jsgamesinputs
+KEY_W = 87; KEY_Z = 90; KEY_UP = 38;
+KEY_A = 65; KEY_Q = 81; KEY_LEFT = 37;
+KEY_S = 83; KEY_DOWN = 40;
+KEY_D = 68; KEY_RIGHT =  39;
+KEY_SPACE = 32;
+KEY_ENTER = 13;
+
 function _$(sel) { return document.querySelector(sel); }
 function _$$(sel) { return document.querySelectorAll(sel); }
 STATE_NORMAL = 0
@@ -233,7 +249,7 @@ Pickup.prototype.getName = function(id) {
 
 Pickup.prototype.trigger = function() {
     if (engine.player.addItem(this.name)) {
-        engine.layers[3].map[this.y][this.x] = ' ';
+        engine.layers[LYR_PICKUPS].map[this.y][this.x] = ' ';
         engine.pickups[this.id] = undefined;
     }
 }
@@ -271,8 +287,8 @@ Actor.prototype.agitate = function() {
 
     this.state = STATE_AGITATED;
     this.glyph = 'A';
-    engine.layers[4].map[y][x] = this.glyph;
-    engine.layers[4].render();
+    engine.layers[LYR_ACTORS].map[y][x] = this.glyph;
+    engine.layers[LYR_ACTORS].render();
 }
 
 Actor.prototype.calm = function() {
@@ -280,8 +296,8 @@ Actor.prototype.calm = function() {
 
     this.state = STATE_NORMAL;
     this.glyph = 'a';
-    engine.layers[4].map[y][x] = this.glyph;
-    engine.layers[4].render();
+    engine.layers[LYR_ACTORS].map[y][x] = this.glyph;
+    engine.layers[LYR_ACTORS].render();
 }
 
 Actor.prototype.move = function(dx, dy, isPlayer) {
@@ -304,10 +320,10 @@ Actor.prototype.move = function(dx, dy, isPlayer) {
     if (ty < 0) ty = 0;
     if (ty > engine.height) ty = engine.height;
 
-    var targetCell = engine.layers[1].map[ty][tx]
-      , d = engine.layers[2].map[ty][tx]
-      , p = engine.layers[3].map[ty][tx]
-      , a = engine.layers[4].map[ty][tx]
+    var targetCell = engine.layers[LYR_WALLS].map[ty][tx]
+      , d = engine.layers[LYR_DOORS].map[ty][tx]
+      , p = engine.layers[LYR_PICKUPS].map[ty][tx]
+      , a = engine.layers[LYR_ACTORS].map[ty][tx]
     ;
 
     // Collisions
@@ -398,7 +414,7 @@ Actor.prototype.hit = function(other) {
 Actor.prototype.die = function() {
     console.log('actor %s died', this.id);
 
-    engine.layers[4].map[this.y][this.x] = ' ';
+    engine.layers[LYR_ACTORS].map[this.y][this.x] = ' ';
     engine.actors[this.id] = undefined;
 }
 function Layer(opts) {
@@ -687,42 +703,28 @@ Player.prototype.use = function(item) {
     this.updateInventoryUI();
     engine.showScreen('game');
 }
-//TODO: World map: put doors on outer walls (solve 2-way travel)
-
-DEBUG = true;
-
-LYR_FLOORS = 0;
-LYR_WALLS = 1;
-LYR_DOORS = 2;
-LYR_PICKUPS = 3;
-LYR_ACTORS = 4;
-
-// alias Z to W, Q to A for AZERTY keyboards; see http://xem.github.io/articles/#jsgamesinputs
-KEY_W = 87; KEY_Z = 90; KEY_UP = 38;
-KEY_A = 65; KEY_Q = 81; KEY_LEFT = 37;
-KEY_S = 83; KEY_DOWN = 40;
-KEY_D = 68; KEY_RIGHT =  39;
-KEY_SPACE = 32;
-KEY_ENTER = 13;
-
 function Engine(opts) {
     opts = opts || {};
     var sprite;
 
-    this.seed = opts.seed || 4242;
-    this.width = opts.W || 10;
-    this.height = opts.H || 10;
-    this.numDoors = opts.D || 1;
-    this.numPickups = opts.P || 3;
-    this.numActors = opts.A || 10;
-    this.layers = [];
-    this.doors = [];
-    this.pickups = [];
-    this.actors = [];
-    this.player = new Player();
     this.mode = 'start';
     this.menu = [];
     this.menuSelection = 0;
+
+    this.layers  = [];
+    this.doors   = [];
+    this.pickups = [];
+    this.actors  = [];
+    this.player  = new Player();
+
+    this.seed       = opts.seed || 4242;
+    this.width      = opts.W || 10;
+    this.height     = opts.H || 10;
+    this.numDoors   = opts.D || 1;
+    this.numPickups = opts.P || 3;
+    this.numActors  = opts.A || 10;
+
+    this.renderMode = '2d';
 
     if (typeof opts.debug != 'undefined') DEBUG = opts.debug;
     window.addEventListener('keydown', this.handleInputs);
@@ -730,6 +732,19 @@ function Engine(opts) {
 
     // setup stage2d
     if (!opts.hasStarted) {
+        for (var y=0; y<this.height; y++) {
+            for (var x=0; x<this.width; x++) {
+                sprite = document.createElement('span');
+                sprite.id = 'B' + y + '_' + x;
+                sprite.className = 'sprite';
+
+                sprite.style.top = y * 20 + 'px';
+                sprite.style.left = x * 15 + 'px';
+
+                _$('#stage2d').appendChild(sprite);
+            }
+        }
+
         for (var y=0; y<this.height; y++) {
             for (var x=0; x<this.width; x++) {
                 sprite = document.createElement('span');
@@ -915,13 +930,14 @@ Engine.prototype.aiTurn = function() {
 Engine.prototype.mergeLayers = function() {
     var tmpLayer = new Layer({ W: this.width, H: this.height })
       , buf = ''
+      , result
     ;
 
     if (DEBUG) console.groupCollapsed('mergeLayer');
 
     for (var y=0; y<this.height; y++) {
         for (var x=0; x<this.width; x++) {
-            tmpLayer.map[y][x] = this.layers[LYR_FLOORS].map[y][x];
+//            tmpLayer.map[y][x] = this.layers[LYR_FLOORS].map[y][x];
 
             var wall = this.layers[LYR_WALLS].map[y][x] === '#';
             if (wall)
@@ -950,12 +966,43 @@ Engine.prototype.mergeLayers = function() {
 
     if (DEBUG) console.groupEnd();
 
-    return buf;
+    switch (this.renderMode) {
+        case '2d':
+            result = [ this.layers[LYR_FLOORS].render(), buf ];
+            break;
+
+        case 'ascii':
+        case 'classic':
+        case 'enhanced':
+        default:
+            result = buf;
+    }
+
+    return result;
 }
 
 // post-processing and final render
 Engine.prototype.render = function() {
-    var buf = this.mergeLayers();
+    var floors
+      , buf
+    ;
+
+    if (this.renderMode === '2d') {
+        var mergeParts = this.mergeLayers();
+        floors = mergeParts[0];
+        buf = mergeParts[1];
+
+        if (_$('#B0_0')) {
+            for (var y = 0; y < this.height; y++) {
+                for (var x = 0; x < this.width; x++) {
+                    _$('#B' + y + '_' + x).className = "sprite ground0";
+                }
+            }
+        }
+
+    } else {
+        buf = this.mergeLayers();
+    }
 
     if (DEBUG) {
         console.groupCollapsed('render');
@@ -965,7 +1012,6 @@ Engine.prototype.render = function() {
 
     stage.innerText = buf;
 
-    //FIXME: Quick-n-Dirty 2d render: split walls and floors into their own layers. always draw the floor layer for sprites' transparency to work properly
     if (! _$('#C0_0')) return buf;
 
     var lines = buf.split(/\n/);
@@ -1002,8 +1048,11 @@ Engine.prototype.render = function() {
                     break;
 
                 case 'd':
-                default:
                     classNames = 'ground1';
+                    break;
+
+                default:
+                    classNames = '';
             }
 
             id += 'C' + y + '_' + x;

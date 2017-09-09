@@ -32,8 +32,8 @@ Actor.prototype.agitate = function() {
 
     this.state = STATE_AGITATED;
     this.glyph = 'A';
-    engine.layers[4].map[y][x] = this.glyph;
-    engine.layers[4].render();
+    engine.layers[LYR_ACTORS].map[y][x] = this.glyph;
+    engine.layers[LYR_ACTORS].render();
 }
 
 Actor.prototype.calm = function() {
@@ -41,8 +41,8 @@ Actor.prototype.calm = function() {
 
     this.state = STATE_NORMAL;
     this.glyph = 'a';
-    engine.layers[4].map[y][x] = this.glyph;
-    engine.layers[4].render();
+    engine.layers[LYR_ACTORS].map[y][x] = this.glyph;
+    engine.layers[LYR_ACTORS].render();
 }
 
 Actor.prototype.move = function(dx, dy, isPlayer) {
@@ -65,10 +65,10 @@ Actor.prototype.move = function(dx, dy, isPlayer) {
     if (ty < 0) ty = 0;
     if (ty > engine.height) ty = engine.height;
 
-    var targetCell = engine.layers[1].map[ty][tx]
-      , d = engine.layers[2].map[ty][tx]
-      , p = engine.layers[3].map[ty][tx]
-      , a = engine.layers[4].map[ty][tx]
+    var targetCell = engine.layers[LYR_WALLS].map[ty][tx]
+      , d = engine.layers[LYR_DOORS].map[ty][tx]
+      , p = engine.layers[LYR_PICKUPS].map[ty][tx]
+      , a = engine.layers[LYR_ACTORS].map[ty][tx]
     ;
 
     // Collisions
@@ -159,6 +159,6 @@ Actor.prototype.hit = function(other) {
 Actor.prototype.die = function() {
     console.log('actor %s died', this.id);
 
-    engine.layers[4].map[this.y][this.x] = ' ';
+    engine.layers[LYR_ACTORS].map[this.y][this.x] = ' ';
     engine.actors[this.id] = undefined;
 }
