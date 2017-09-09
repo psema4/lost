@@ -2,8 +2,8 @@ function startNewGame(hasStarted) {
     setSeed(4242);
 
     window.engine = new Engine({
-        W: 20
-      , H: 10
+        W: 50
+      , H: 30
       , D: 1
       , A: 10
       , P: 3

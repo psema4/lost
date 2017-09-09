@@ -508,7 +508,7 @@ function createEventsDeck(size) {
     function sick() {
         if (engine.player.hp > 1) {
             engine.player.hit();
-            _$('#message').innerText = 'You don\'t fell well';
+            _$('#message').innerText = 'You don\'t feel well';
         }
     }
 
@@ -597,7 +597,7 @@ Layer.prototype.generate = function(walls) {
             for (x = 0; x < this.width; x++) {
                 var placeThing = (this.probability >= 1 || prng.random() < this.probability);
 
-                if (this.border && (y == 0 || y == this.height-1 || x == 0 || x == this.width-1))
+                if (this.border && (y < this.border || y >= this.height - this.border - 1 || x < this.border || x >= this.width - this.border -1))
                     placeThing = true;
 
                 if (placeThing) {
@@ -621,13 +621,12 @@ Layer.prototype.generate = function(walls) {
                 y = prng.getInt(this.height-1, 0);
 
                 if (walls[y][x] != '#' && this.map[y][x] == ' ') {
-                    this.things[t] = new this.thing({ layer: this.id, id: t, x: x, y: y });
+                    var thing = new this.thing({ layer: this.id, id: t, x: x, y: y });
+                    thing.name = thing.getName(t);
+                    this.map[y][x] = thing.glyph || '?';
+                    this.things[t] = thing;
 
-                    var name = this.things[t].getName(t);
-                    this.things[t].name = name;
                     pending = false;
-
-                    this.map[y][x] = this.things[t].glyph || '?';
                 }
             }
         }
@@ -888,6 +887,7 @@ Engine.prototype.setSeed = function(s) {
     window.setSeed(s);
     this.generateLayers();
     this.render();
+    this.centerView();
 }
 
 Engine.prototype.teardown = function() {
@@ -911,7 +911,7 @@ Engine.prototype.generateLayers = function() {
     this.floors = this.layers[LYR_FLOORS].things;
 
     // Create a layer for walls
-    this.layers.push(new Layer({ id: LYR_WALLS, W: this.width, H: this.height, N: -1, P: 0.15, T: Wall, B: true }));
+    this.layers.push(new Layer({ id: LYR_WALLS, W: this.width, H: this.height, N: -1, P: 0.15, T: Wall, B: 5 }));
     this.layers[LYR_WALLS].generate();
     this.walls = this.layers[LYR_WALLS].things;
 
@@ -987,11 +987,23 @@ Engine.prototype.handleInputs = function(e) {
         default:
     }
 
+    engine.centerView();
+
     if (isPlaying) {
         engine.render();
         engine.aiTurn();
     }
 }
+
+Engine.prototype.centerView = function() {
+    // reposition stage
+    if (typeof engine != 'undefined' && engine.actors.length > 1) {
+        var stage = _$('#stage2d');
+        stage.style.top =  ((engine.actors[0].y * 20 - 100) * -1) + 'px';
+        stage.style.left = ((engine.actors[0].x * 15 - 150) * -1) + 'px';
+    }
+}
+
 
 Engine.prototype.selectPrevious = function() {
     var buttons;
@@ -1254,8 +1266,8 @@ function startNewGame(hasStarted) {
     setSeed(4242);
 
     window.engine = new Engine({
-        W: 20
-      , H: 10
+        W: 50
+      , H: 30
       , D: 1
       , A: 10
       , P: 3

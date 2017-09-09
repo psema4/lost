@@ -6,8 +6,8 @@
         <meta name=cache-control content="max-age=-1">
 
         <title>Lost</title>
-        <link rel=stylesheet href=sprites.css />
-        <link rel=stylesheet href=game.css />
+        <link rel=stylesheet href=css/sprites.css />
+        <link rel=stylesheet href=css/main.css />
     </head>
 
     <body>
@@ -37,8 +37,10 @@
 
             <div id='main'>
                 <article>
-                    <tt><pre id=stage></pre></tt>
-                    <div id=stage2d></div>
+                    <div id="view">
+                        <tt><pre id=stage></pre></tt>
+                        <div id=stage2d></div>
+                    </div>
                 </article>
 
                 <nav>
@@ -75,19 +77,19 @@
             <button onclick="startNewGame(true)">Play Again?</button>
         </div>
 
-        <script src=msws.js></script>
-        <script src=prng.js></script>
-        <script src=util.js></script>
-        <script src=engine/things/floor.js></script>
-        <script src=engine/things/wall.js></script>
-        <script src=engine/things/door.js></script>
-        <script src=engine/things/pickup.js></script>
-        <script src=engine/things/actor.js></script>
-        <script src=engine/cards/card.js></script>
-        <script src=engine/cards/events.js></script>
-        <script src=engine/layer.js></script>
-        <script src=engine/player.js></script>
-        <script src=engine/engine.js></script>
-        <script src=main.js></script>
+        <script src=js/msws.js></script>
+        <script src=js/prng.js></script>
+        <script src=js/util.js></script>
+        <script src=js/engine/things/floor.js></script>
+        <script src=js/engine/things/wall.js></script>
+        <script src=js/engine/things/door.js></script>
+        <script src=js/engine/things/pickup.js></script>
+        <script src=js/engine/things/actor.js></script>
+        <script src=js/engine/cards/card.js></script>
+        <script src=js/engine/cards/events.js></script>
+        <script src=js/engine/layer.js></script>
+        <script src=js/engine/player.js></script>
+        <script src=js/engine/engine.js></script>
+        <script src=js/main.js></script>
     </body>
 </html>

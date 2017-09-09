@@ -56,7 +56,7 @@ function createEventsDeck(size) {
     function sick() {
         if (engine.player.hp > 1) {
             engine.player.hit();
-            _$('#message').innerText = 'You don\'t fell well';
+            _$('#message').innerText = 'You don\'t feel well';
         }
     }
 

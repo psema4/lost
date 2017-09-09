@@ -75,6 +75,7 @@ Engine.prototype.setSeed = function(s) {
     window.setSeed(s);
     this.generateLayers();
     this.render();
+    this.centerView();
 }
 
 Engine.prototype.teardown = function() {
@@ -98,7 +99,7 @@ Engine.prototype.generateLayers = function() {
     this.floors = this.layers[LYR_FLOORS].things;
 
     // Create a layer for walls
-    this.layers.push(new Layer({ id: LYR_WALLS, W: this.width, H: this.height, N: -1, P: 0.15, T: Wall, B: true }));
+    this.layers.push(new Layer({ id: LYR_WALLS, W: this.width, H: this.height, N: -1, P: 0.15, T: Wall, B: 5 }));
     this.layers[LYR_WALLS].generate();
     this.walls = this.layers[LYR_WALLS].things;
 
@@ -174,11 +175,23 @@ Engine.prototype.handleInputs = function(e) {
         default:
     }
 
+    engine.centerView();
+
     if (isPlaying) {
         engine.render();
         engine.aiTurn();
     }
 }
+
+Engine.prototype.centerView = function() {
+    // reposition stage
+    if (typeof engine != 'undefined' && engine.actors.length > 1) {
+        var stage = _$('#stage2d');
+        stage.style.top =  ((engine.actors[0].y * 20 - 100) * -1) + 'px';
+        stage.style.left = ((engine.actors[0].x * 15 - 150) * -1) + 'px';
+    }
+}
+
 
 Engine.prototype.selectPrevious = function() {
     var buttons;

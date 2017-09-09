@@ -72,7 +72,7 @@ Layer.prototype.generate = function(walls) {
             for (x = 0; x < this.width; x++) {
                 var placeThing = (this.probability >= 1 || prng.random() < this.probability);
 
-                if (this.border && (y == 0 || y == this.height-1 || x == 0 || x == this.width-1))
+                if (this.border && (y < this.border || y >= this.height - this.border - 1 || x < this.border || x >= this.width - this.border -1))
                     placeThing = true;
 
                 if (placeThing) {
@@ -96,13 +96,12 @@ Layer.prototype.generate = function(walls) {
                 y = prng.getInt(this.height-1, 0);
 
                 if (walls[y][x] != '#' && this.map[y][x] == ' ') {
-                    this.things[t] = new this.thing({ layer: this.id, id: t, x: x, y: y });
+                    var thing = new this.thing({ layer: this.id, id: t, x: x, y: y });
+                    thing.name = thing.getName(t);
+                    this.map[y][x] = thing.glyph || '?';
+                    this.things[t] = thing;
 
-                    var name = this.things[t].getName(t);
-                    this.things[t].name = name;
                     pending = false;
-
-                    this.map[y][x] = this.things[t].glyph || '?';
                 }
             }
         }
