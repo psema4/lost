@@ -22,8 +22,8 @@ function Engine(opts) {
     this.numActors  = opts.A || 10;
 
     this.renderMode = '2d';
-
     this.cardDecks = [];
+    this.flickerDisabled = true;
 
     if (typeof opts.debug != 'undefined') DEBUG = opts.debug;
     window.addEventListener('keydown', this.handleInputs);
@@ -458,7 +458,7 @@ Engine.prototype.dayNightCycle = function(state) {
     if (state == 'night') {
         _$('#lightmask').style.display = 'inline-block';
         _$('#light').style.display = 'inline-block';
-        this.lightFlicker();
+        engine.lightFlicker();
 
     } else {
         _$('#lightmask').style.display = 'none';
@@ -472,12 +472,20 @@ Engine.prototype.lightFlicker = function() {
       , next = Math.floor(Math.random() * 65) + 15
     ;
 
-    // clamp scale
-    if (s > 1.5) s = 1.5;
-
-    _$('#light').style.backgroundColor = 'rgba(' + v + ', ' + v + ', 0, 0.5)';
+    if (s > 1.5) s = 1.5; // clamp scale
     _$('#lightmask').style.transform = 'scale(' + s + ')';
+
+    if (engine.storm && !engine.flickerDisabled)
+        _$('#light').style.backgroundColor = 'rgba(' + v + ', ' + v + ', 0, 0.5)';
 
     if (_$('#light').style.display != 'none')
         setTimeout(engine.lightFlicker, next);
+}
+
+Engine.prototype.lightning = function() {
+    this.storm = true;
+    setTimeout(function() {
+        engine.storm = false;
+        _$('#light').style.backgroundColor = 'rgba(64,64,0,0.5)';
+    }, 1000);
 }
