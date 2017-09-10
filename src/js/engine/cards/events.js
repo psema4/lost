@@ -30,6 +30,7 @@ function createEventsDeck(size) {
 
     // Equivalent to using a scroll
     function scroll() {
+        engine.lightning();
         engine.actors.forEach(function(actor) {
             if (actor) {
                 if (actor.id == 0) return;
@@ -50,10 +51,11 @@ function createEventsDeck(size) {
             actor = engine.actors[idx]
         }
 
-        if (idx != 0)
+        if (idx != 0) {
             actor.hit();
-
-        _$('#message').innerText = 'Lightning Strike!';
+            engine.lightning();
+            _$('#message').innerText = 'Lightning Strike!';
+        }
     }
 
     // Won't kill player but will weaken

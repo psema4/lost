@@ -23,7 +23,7 @@ function Engine(opts) {
 
     this.renderMode = '2d';
     this.cardDecks = [];
-    this.flickerDisabled = true;
+    this.storm = false;
 
     if (typeof opts.debug != 'undefined') DEBUG = opts.debug;
     window.addEventListener('keydown', this.handleInputs);
@@ -453,16 +453,17 @@ Engine.prototype.getDiscards = function(deck) {
 Engine.prototype.dayNightCycle = function(state) {
     // toggle if desired state not specified
     if (!state)
-        state = _$('#lightmask').style.display == 'none' ? 'night' : 'day';
+        state = _$('#lightmask').style.opacity < 1 ? 'night' : 'day';
 
+    //FIXME: handle time passing; fade lightmask opacity between sundown and sunup
+    //FIXME: also set light colour:    6AM rgba(127,63,0,0.5)      6PM rgba(127,63,0,0.5)
+    //FIXME:                           12PM rgba(127,127,0,0)     12AM rgba(0,0,255,0.7)
+    //FIXME: each turn should be ~ 10minutes; 6 turns per hour
     if (state == 'night') {
-        _$('#lightmask').style.display = 'inline-block';
-        _$('#light').style.display = 'inline-block';
-        engine.lightFlicker();
+        _$('#lightmask').style.opacity = 1;
 
     } else {
-        _$('#lightmask').style.display = 'none';
-        _$('#light').style.display = 'none';
+        _$('#lightmask').style.opacity = 0;
     }
 }
 
@@ -475,15 +476,16 @@ Engine.prototype.lightFlicker = function() {
     if (s > 1.5) s = 1.5; // clamp scale
     _$('#lightmask').style.transform = 'scale(' + s + ')';
 
-    if (engine.storm && !engine.flickerDisabled)
+    if (engine.storm) 
         _$('#light').style.backgroundColor = 'rgba(' + v + ', ' + v + ', 0, 0.5)';
 
-    if (_$('#light').style.display != 'none')
-        setTimeout(engine.lightFlicker, next);
+    setTimeout(engine.lightFlicker, next);
 }
 
 Engine.prototype.lightning = function() {
-    this.storm = true;
+    engine.storm = true;
+    engine.lightFlicker();
+
     setTimeout(function() {
         engine.storm = false;
         _$('#light').style.backgroundColor = 'rgba(64,64,0,0.5)';

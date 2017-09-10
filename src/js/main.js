@@ -14,7 +14,6 @@ function startNewGame(hasStarted) {
 
     engine.render();
     engine.centerView();
-    engine.dayNightCycle();
 
     if (!!hasStarted) {
         engine.showScreen('intro');
