@@ -33,6 +33,7 @@ Actor.prototype.agitate = function() {
     this.state = STATE_AGITATED;
     this.glyph = 'A';
     engine.layers[LYR_ACTORS].map[y][x] = this.glyph;
+    engine.layers[LYR_ACTORS].dirty = true;
     engine.layers[LYR_ACTORS].render();
 }
 
@@ -42,6 +43,7 @@ Actor.prototype.calm = function() {
     this.state = STATE_NORMAL;
     this.glyph = 'a';
     engine.layers[LYR_ACTORS].map[y][x] = this.glyph;
+    engine.layers[LYR_ACTORS].dirty = true;
     engine.layers[LYR_ACTORS].render();
 }
 
@@ -134,6 +136,7 @@ Actor.prototype.move = function(dx, dy, isPlayer) {
         this.x = tx;
         this.y = ty;
         engine.layers[this.layer].map[this.y][this.x] = this.glyph;
+        engine.layers[this.layer].dirty = true;
         engine.layers[this.layer].render();
     }
 

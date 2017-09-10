@@ -259,9 +259,8 @@ Engine.prototype.mergeLayers = function() {
 
     for (var y=0; y<this.height; y++) {
         for (var x=0; x<this.width; x++) {
-//            tmpLayer.map[y][x] = this.layers[LYR_FLOORS].map[y][x];
-
             var wall = this.layers[LYR_WALLS].map[y][x] === '#';
+
             if (wall)
                 tmpLayer.map[y][x] = this.layers[LYR_WALLS].map[y][x];
 

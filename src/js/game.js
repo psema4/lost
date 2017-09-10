@@ -259,6 +259,8 @@ Pickup.prototype.getName = function(id) {
 Pickup.prototype.trigger = function() {
     if (engine.player.addItem(this.name)) {
         engine.layers[LYR_PICKUPS].map[this.y][this.x] = ' ';
+        engine.layers[LYR_PICKUPS].dirty = true;
+        engine.layers[LYR_PICKUPS].render();
         engine.pickups[this.id] = undefined;
     }
 }
@@ -297,6 +299,7 @@ Actor.prototype.agitate = function() {
     this.state = STATE_AGITATED;
     this.glyph = 'A';
     engine.layers[LYR_ACTORS].map[y][x] = this.glyph;
+    engine.layers[LYR_ACTORS].dirty = true;
     engine.layers[LYR_ACTORS].render();
 }
 
@@ -306,6 +309,7 @@ Actor.prototype.calm = function() {
     this.state = STATE_NORMAL;
     this.glyph = 'a';
     engine.layers[LYR_ACTORS].map[y][x] = this.glyph;
+    engine.layers[LYR_ACTORS].dirty = true;
     engine.layers[LYR_ACTORS].render();
 }
 
@@ -398,6 +402,7 @@ Actor.prototype.move = function(dx, dy, isPlayer) {
         this.x = tx;
         this.y = ty;
         engine.layers[this.layer].map[this.y][this.x] = this.glyph;
+        engine.layers[this.layer].dirty = true;
         engine.layers[this.layer].render();
     }
 
@@ -547,6 +552,8 @@ function Layer(opts) {
     this.border = opts.B || false;
     this.map = [];
     this.things = [];
+    this.dirty = true;
+    this.rendered = '';
 
     this.empty();
 
@@ -650,12 +657,17 @@ Layer.prototype.generate = function(walls) {
 Layer.prototype.render = function() {
     var buf = '';
 
+    if (!this.dirty) return this.rendered;
+
     for (var y=0; y<this.height; y++) {
         for (var x=0; x<this.width; x++)
             buf += this.map[y][x];
         buf += "\n";
     }
     
+    this.rendered = buf;
+    this.dirty = false;
+
     return buf;
 }
 
@@ -1083,9 +1095,8 @@ Engine.prototype.mergeLayers = function() {
 
     for (var y=0; y<this.height; y++) {
         for (var x=0; x<this.width; x++) {
-//            tmpLayer.map[y][x] = this.layers[LYR_FLOORS].map[y][x];
-
             var wall = this.layers[LYR_WALLS].map[y][x] === '#';
+
             if (wall)
                 tmpLayer.map[y][x] = this.layers[LYR_WALLS].map[y][x];
 
@@ -1293,7 +1304,7 @@ Engine.prototype.dayNightCycle = function(state) {
 
 Engine.prototype.lightFlicker = function() {
     var v = Math.floor(Math.random() * 128)
-      , s = 1 + (Math.random() / 2)
+      , s = 1.25 + (v/128) * 0.25
       , next = Math.floor(Math.random() * 65) + 15
     ;
 

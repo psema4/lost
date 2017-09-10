@@ -10,6 +10,8 @@ function Layer(opts) {
     this.border = opts.B || false;
     this.map = [];
     this.things = [];
+    this.dirty = true;
+    this.rendered = '';
 
     this.empty();
 
@@ -113,12 +115,17 @@ Layer.prototype.generate = function(walls) {
 Layer.prototype.render = function() {
     var buf = '';
 
+    if (!this.dirty) return this.rendered;
+
     for (var y=0; y<this.height; y++) {
         for (var x=0; x<this.width; x++)
             buf += this.map[y][x];
         buf += "\n";
     }
     
+    this.rendered = buf;
+    this.dirty = false;
+
     return buf;
 }
 
