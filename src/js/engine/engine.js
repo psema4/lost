@@ -133,7 +133,8 @@ Engine.prototype.handleInputs = function(e) {
     ;
 
     if (isPlaying)
-        _$('#message').innerText = '';
+        //_$('#message').innerText = '';
+        message.innerText = '';
 
     switch (e.which) {
         case KEY_W:
@@ -177,7 +178,7 @@ Engine.prototype.handleInputs = function(e) {
     engine.centerView();
 
     if (isPlaying) {
-        engine.render();
+        engine.render(); //called by aiTurn
         engine.aiTurn();
     }
 }
@@ -248,45 +249,47 @@ Engine.prototype.aiTurn = function() {
 
 // combine layers (raw render)
 Engine.prototype.mergeLayers = function() {
-    var tmpLayer = new Layer({ W: this.width, H: this.height })
-      , buf = ''
-      , result
+    var buf = ''
+      , ch
+      , wall
+      , w = this.width
+      , h = this.height
+      , floors = this.layers[LYR_FLOORS].map
+      , walls = this.layers[LYR_WALLS].map
+      , doors = this.layers[LYR_DOORS].map
+      , pickups = this.layers[LYR_PICKUPS].map
+      , actors = this.layers[LYR_ACTORS].map
     ;
 
-    for (var y=0; y<this.height; y++) {
-        for (var x=0; x<this.width; x++) {
-            var wall = this.layers[LYR_WALLS].map[y][x] === '#';
+    for (var y=0; y<h; y++) {
+        for (var x=0; x<w; x++) {
+            ch = '';
+            wall = walls[y][x] === '#';
 
-            if (wall)
-                tmpLayer.map[y][x] = this.layers[LYR_WALLS].map[y][x];
+            if (wall) {
+                ch = walls[y][x];
 
-            // cells without walls copy from other layers
-            switch(tmpLayer.map[y][x]) {
-                case ' ':
-                case '.':
-                case '~':
-                    if (this.layers[LYR_DOORS].map[y][x] != ' ') tmpLayer.map[y][x] = this.layers[LYR_DOORS].map[y][x];
-                    if (this.layers[LYR_PICKUPS].map[y][x] != ' ') tmpLayer.map[y][x] = this.layers[LYR_PICKUPS].map[y][x];
-                    if (this.layers[LYR_ACTORS].map[y][x] != ' ') tmpLayer.map[y][x] = this.layers[LYR_ACTORS].map[y][x];
-                    break;
+            } else {
+                if (doors[y][x] != ' ') {
+                    ch = doors[y][x]
+
+                } else if (pickups[y][x] != ' ') {
+                    ch = pickups[y][x];
+
+                } else if (actors[y][x] != ' ') {
+                    ch = actors[y][x];
+
+                } else {
+                    ch = ' ';
+                }
             }
 
-            buf += tmpLayer.map[y][x];
+            buf += ch;
         }
-
         buf += "\n";
     }
 
-    switch (this.renderMode) {
-        case '2d':
-            result = [ this.layers[LYR_FLOORS].render(), buf ];
-            break;
-
-        default:
-            result = buf;
-    }
-
-    return result;
+    return (this.renderMode === '2d') ? [ this.layers[LYR_FLOORS].render(), buf ] : buf;
 }
 
 // post-processing and final render
@@ -303,7 +306,8 @@ Engine.prototype.render = function() {
         if (_$('#B0_0')) {
             for (var y = 0; y < this.height; y++) {
                 for (var x = 0; x < this.width; x++) {
-                    _$('#B' + y + '_' + x).className = "sprite grass";
+                    //_$('#B' + y + '_' + x).className = "sprite grass";
+                    window['B'+y+'_'+x].className = 'sprite grass';
                 }
             }
         }
@@ -459,7 +463,8 @@ Engine.prototype.lightFlicker = function() {
     _$('#lightmask').style.transform = 'scale(' + s + ')';
 
     if (engine.storm) 
-        _$('#light').style.backgroundColor = 'rgba(' + v + ', ' + v + ', 0, 0.5)';
+        //_$('#light').style.backgroundColor = 'rgba(' + v + ', ' + v + ', 0, 0.5)';
+        light.style.backgroundColor = 'rgba(' + v + ', ' + v + ', 0, 0.5)';
 
     setTimeout(engine.lightFlicker, next);
 }
