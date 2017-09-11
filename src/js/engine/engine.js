@@ -25,7 +25,6 @@ function Engine(opts) {
     this.cardDecks = [];
     this.storm = false;
 
-    if (typeof opts.debug != 'undefined') DEBUG = opts.debug;
     window.addEventListener('keydown', this.handleInputs);
     this.setSeed(seed);
 
@@ -237,7 +236,6 @@ Engine.prototype.aiTurn = function() {
         if ((!actor) || actor.id == 0) return;
 
         var d = prng.getInt(4, 1) - 1;
-        if (DEBUG) console.log('  actor %s move direction: %s', actor.id, d);
 
         if (d == 0) actor.move(0, -1);
         if (d == 1) actor.move(-1, 0);
@@ -255,16 +253,12 @@ Engine.prototype.mergeLayers = function() {
       , result
     ;
 
-    if (DEBUG) console.groupCollapsed('mergeLayer');
-
     for (var y=0; y<this.height; y++) {
         for (var x=0; x<this.width; x++) {
             var wall = this.layers[LYR_WALLS].map[y][x] === '#';
 
             if (wall)
                 tmpLayer.map[y][x] = this.layers[LYR_WALLS].map[y][x];
-
-            if (DEBUG) console.log('FW: tmpLayer.map[%s][%s]: "%s"', y, x, tmpLayer.map[y][x]); 
 
             // cells without walls copy from other layers
             switch(tmpLayer.map[y][x]) {
@@ -274,8 +268,6 @@ Engine.prototype.mergeLayers = function() {
                     if (this.layers[LYR_DOORS].map[y][x] != ' ') tmpLayer.map[y][x] = this.layers[LYR_DOORS].map[y][x];
                     if (this.layers[LYR_PICKUPS].map[y][x] != ' ') tmpLayer.map[y][x] = this.layers[LYR_PICKUPS].map[y][x];
                     if (this.layers[LYR_ACTORS].map[y][x] != ' ') tmpLayer.map[y][x] = this.layers[LYR_ACTORS].map[y][x];
-
-                    if (DEBUG) console.log('PA: tmpLayer[%s][%s]: "%s"', y, x, tmpLayer.map[y][x]); 
                     break;
             }
 
@@ -284,8 +276,6 @@ Engine.prototype.mergeLayers = function() {
 
         buf += "\n";
     }
-
-    if (DEBUG) console.groupEnd();
 
     switch (this.renderMode) {
         case '2d':
@@ -320,12 +310,6 @@ Engine.prototype.render = function() {
 
     } else {
         buf = this.mergeLayers();
-    }
-
-    if (DEBUG) {
-        console.groupCollapsed('render');
-        console.log(buf);
-        console.groupEnd();
     }
 
     stage.innerText = buf;
@@ -468,7 +452,7 @@ Engine.prototype.dayNightCycle = function(state) {
 Engine.prototype.lightFlicker = function() {
     var v = Math.floor(Math.random() * 128)
       , s = 1.25 + (v/128) * 0.25
-      , next = Math.floor(Math.random() * 65) + 15
+      , next = Math.floor(Math.random() * 200) + 50
     ;
 
     if (s > 1.5) s = 1.5; // clamp scale

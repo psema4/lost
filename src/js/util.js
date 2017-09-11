@@ -1,5 +1,3 @@
-DEBUG = true;
-
 LYR_FLOORS = 0;
 LYR_WALLS = 1;
 LYR_DOORS = 2;
@@ -17,5 +15,14 @@ KEY_ENTER = 13;
 DECK_EVENTS = 0;
 DECK_EVENTS_DISCARDS = 1;
 
-function _$(sel) { return document.querySelector(sel); }
+function _$(sel) {
+    if (sel.indexOf('#' > -1)) {
+        sel = sel.replace(/#/, '');
+        return window[sel];
+
+    } else {
+        return __$(sel);
+    }
+}
+function __$(sel) { return document.querySelector(sel); }
 function _$$(sel) { return document.querySelectorAll(sel); }

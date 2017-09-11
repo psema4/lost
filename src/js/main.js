@@ -7,7 +7,6 @@ function startNewGame(hasStarted) {
       , D: 1
       , A: 10
       , P: 3
-      , debug: false
       , seed: 4242
       , hasStarted: hasStarted
     });
