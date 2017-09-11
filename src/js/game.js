@@ -1130,9 +1130,6 @@ Engine.prototype.mergeLayers = function() {
             result = [ this.layers[LYR_FLOORS].render(), buf ];
             break;
 
-        case 'ascii':
-        case 'classic':
-        case 'enhanced':
         default:
             result = buf;
     }
@@ -1154,7 +1151,7 @@ Engine.prototype.render = function() {
         if (_$('#B0_0')) {
             for (var y = 0; y < this.height; y++) {
                 for (var x = 0; x < this.width; x++) {
-                    _$('#B' + y + '_' + x).className = "sprite ground0";
+                    _$('#B' + y + '_' + x).className = "sprite grass";
                 }
             }
         }
@@ -1187,27 +1184,27 @@ Engine.prototype.render = function() {
 
             switch(column) {
                 case '.':
-                    classNames = 'ground0';
+                    classNames = 'grass';
                     break;
 
                 case '#':
-                    classNames = 'wall0';
+                    classNames = 'tree';
                     break;
 
                 case '@':
-                    classNames = 'actor0 up frame1';
+                    classNames = 'player';
                     break;
 
                 case 'a':
-                    classNames = 'actor1 up frame1';
+                    classNames = 'actor';
                     break;
 
                 case 'p':
-                    classNames = 'pickup0';
+                    classNames = 'gold';
                     break;
 
                 case 'd':
-                    classNames = 'ground1';
+                    classNames = 'stones';
                     break;
 
                 default:
@@ -1299,6 +1296,7 @@ Engine.prototype.dayNightCycle = function(state) {
     //FIXME: each turn should be ~ 10minutes; 6 turns per hour
     if (state == 'night') {
         _$('#lightmask').style.opacity = 1;
+        this.lightFlicker();
 
     } else {
         _$('#lightmask').style.opacity = 0;

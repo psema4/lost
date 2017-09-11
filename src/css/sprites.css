@@ -6,162 +6,34 @@
     background-image: url(../assets/lost.png);
 }
 
-.ground0 {
+.grass {
     background-position: 0px 0px;
 }
 
-.ground1 {
+.stones {
     background-position: -15px 0px;
 }
 
-.wall0 {
-    background-position: -75px 0px;
-}
-
-.actor0.up.frame1 {
-    background-position: -150px 0px;
-}
-
-.actor0.up.frame2 {
-    background-position: -165px 0px;
-}
-
-.actor0.left.frame1 {
-    background-position: -180px 0px;
-}
-
-.actor0.left.frame2 {
-    background-position: -195px 0px;
-}
-
-.actor0.down.frame1 {
-    background-position: -210px 0px;
-}
-
-.actor0.down.frame2 {
-    background-position: -225px 0px;
-}
-
-.actor0.right.frame1 {
-    background-position: -240px 0px;
-}
-
-.actor0.right.frame2 {
-    background-position: -255px 0px;
-}
-
-.actor1.up.frame1 {
+.tree {
     background-position: 0px -20px;
 }
 
-.actor1.up.frame2 {
-    background-position: -15px -20px;
-}
-
-.actor1.left.frame1 {
-    background-position: -30px -20px;
-}
-
-.actor1.left.frame2 {
-    background-position: -45px -20px;
-}
-
-.actor1.down.frame1 {
-    background-position: -60px -20px;
-}
-
-.actor1.down.frame2 {
-    background-position: -75px -20px;
-}
-
-.actor1.right.frame1 {
-    background-position: -90px -20px;
-}
-
-.actor1.right.frame2 {
-    background-position: -105px -20px;
-}
-
-.actor2.up.frame1 {
-    background-position: -120px -20px;
-}
-
-.actor2.up.frame2 {
-    background-position: -135px -20px;
-}
-
-.actor2.left.frame1 {
-    background-position: -150px -20px;
-}
-
-.actor2.left.frame2 {
-    background-position: -165px -20px;
-}
-
-.actor2.down.frame1 {
-    background-position: -180px -20px;
-}
-
-.actor2.down.frame2 {
-    background-position: -195px -20px;
-}
-
-.actor2.right.frame1 {
-    background-position: -210px -20px;
-}
-
-.actor2.right.frame2 {
-    background-position: -225px -20px;
-}
-
-.actor3.up.frame1 {
-    background-position: -240px -20px;
-}
-
-.actor3.up.frame2 {
-    background-position: -255px -20px;
-}
-
-.actor3.left.frame1 {
-    background-position: -270px -20px;
-}
-
-.actor3.left.frame2 {
-    background-position: -285px -20px;
-}
-
-.actor3.down.frame1 {
-    background-position: -300px -20px;
-}
-
-.actor3.down.frame2 {
-    background-position: -315px -20px;
-}
-
-.actor3.right.frame1 {
-    background-position: -330px -20px;
-}
-
-.actor3.right.frame2 {
-    background-position: -345px -20px;
-}
-
-.pickup0 {
+.player {
     background-position: 0px -40px;
 }
 
-.pickup1 {
+.actor {
     background-position: -15px -40px;
 }
 
-.pickup2 {
-    background-position: -30px -40px;
+.gold {
+    background-position: 0px -60px;
 }
 
-.pickup3 {
-    background-position: -45px -40px;
+.scroll {
+    background-position: -15px -60px;
 }
 
-.pickup4 {
-    background-position: -60px -40px;
+.potion {
+    background-position: -30px -60px;
 }
