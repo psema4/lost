@@ -280,7 +280,7 @@ Engine.prototype.mergeLayers = function() {
                     ch = actors[y][x];
 
                 } else {
-                    ch = ' ';
+                    ch = '.';
                 }
             }
 
