@@ -140,7 +140,7 @@ footer {
 #lightmask {
     opacity: 0;
     background-image: url(../assets/lost-lightmask.png);
-    transition: transform 0.15s;
+    transition: transform 0.2s;
 }
 
 #inventory {

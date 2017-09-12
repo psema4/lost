@@ -184,8 +184,4 @@ button:hover, button.highlight { background-color: #fff; }
         min-height: 50px;
         max-height: 50px;
     }
-
-    #stage2d {
-        transition: top 0s, left 0s;
-    }
 }

@@ -114,8 +114,6 @@ window.setSeed = function(s) {
 }
 
 setSeed(4242);
-DEBUG = true;
-
 LYR_FLOORS = 0;
 LYR_WALLS = 1;
 LYR_DOORS = 2;
@@ -133,7 +131,16 @@ KEY_ENTER = 13;
 DECK_EVENTS = 0;
 DECK_EVENTS_DISCARDS = 1;
 
-function _$(sel) { return document.querySelector(sel); }
+function _$(sel) {
+    if (sel.indexOf('#' > -1)) {
+        sel = sel.replace(/#/, '');
+        return window[sel];
+
+    } else {
+        return __$(sel);
+    }
+}
+function __$(sel) { return document.querySelector(sel); }
 function _$$(sel) { return document.querySelectorAll(sel); }
 STATE_NORMAL = 0
 
@@ -862,11 +869,12 @@ function Engine(opts) {
     this.renderMode = '2d';
     this.cardDecks = [];
     this.storm = false;
+    this.effects = (screen.availWidth >= 800); //FIXME: better mobile detection
 
-    if (typeof opts.debug != 'undefined') DEBUG = opts.debug;
     window.addEventListener('keydown', this.handleInputs);
     this.setSeed(seed);
 
+    // NOTE: this render strategy is much more performant than creating document fragments
     // setup stage2d
     if (!opts.hasStarted) {
         for (var y=0; y<this.height; y++) {
@@ -937,7 +945,7 @@ Engine.prototype.generateLayers = function() {
     this.floors = this.layers[LYR_FLOORS].things;
 
     // Create a layer for walls
-    this.layers.push(new Layer({ id: LYR_WALLS, W: this.width, H: this.height, N: -1, P: 0.15, T: Wall, B: 5 }));
+    this.layers.push(new Layer({ id: LYR_WALLS, W: this.width, H: this.height, N: -1, P: 0.15, T: Wall, B: 1 }));
     this.layers[LYR_WALLS].generate();
     this.walls = this.layers[LYR_WALLS].things;
 
@@ -972,7 +980,8 @@ Engine.prototype.handleInputs = function(e) {
     ;
 
     if (isPlaying)
-        _$('#message').innerText = '';
+        //_$('#message').innerText = '';
+        message.innerText = '';
 
     switch (e.which) {
         case KEY_W:
@@ -1013,11 +1022,10 @@ Engine.prototype.handleInputs = function(e) {
         default:
     }
 
-    engine.centerView();
-
     if (isPlaying) {
-        engine.render();
         engine.aiTurn();
+        engine.render();
+        engine.centerView();
     }
 }
 
@@ -1075,66 +1083,57 @@ Engine.prototype.aiTurn = function() {
         if ((!actor) || actor.id == 0) return;
 
         var d = prng.getInt(4, 1) - 1;
-        if (DEBUG) console.log('  actor %s move direction: %s', actor.id, d);
 
         if (d == 0) actor.move(0, -1);
         if (d == 1) actor.move(-1, 0);
         if (d == 2) actor.move(0, 1);
         if (d == 3) actor.move(1, 0);
     });
-
-    this.render();
 }
 
 // combine layers (raw render)
 Engine.prototype.mergeLayers = function() {
-    var tmpLayer = new Layer({ W: this.width, H: this.height })
-      , buf = ''
-      , result
+    var buf = ''
+      , ch
+      , wall
+      , w = this.width
+      , h = this.height
+      , floors = this.layers[LYR_FLOORS].map
+      , walls = this.layers[LYR_WALLS].map
+      , doors = this.layers[LYR_DOORS].map
+      , pickups = this.layers[LYR_PICKUPS].map
+      , actors = this.layers[LYR_ACTORS].map
     ;
 
-    if (DEBUG) console.groupCollapsed('mergeLayer');
+    for (var y=0; y<h; y++) {
+        for (var x=0; x<w; x++) {
+            ch = '';
+            wall = walls[y][x] === '#';
 
-    for (var y=0; y<this.height; y++) {
-        for (var x=0; x<this.width; x++) {
-            var wall = this.layers[LYR_WALLS].map[y][x] === '#';
+            if (wall) {
+                ch = walls[y][x];
 
-            if (wall)
-                tmpLayer.map[y][x] = this.layers[LYR_WALLS].map[y][x];
+            } else {
+                if (doors[y][x] != ' ') {
+                    ch = doors[y][x]
 
-            if (DEBUG) console.log('FW: tmpLayer.map[%s][%s]: "%s"', y, x, tmpLayer.map[y][x]); 
+                } else if (pickups[y][x] != ' ') {
+                    ch = pickups[y][x];
 
-            // cells without walls copy from other layers
-            switch(tmpLayer.map[y][x]) {
-                case ' ':
-                case '.':
-                case '~':
-                    if (this.layers[LYR_DOORS].map[y][x] != ' ') tmpLayer.map[y][x] = this.layers[LYR_DOORS].map[y][x];
-                    if (this.layers[LYR_PICKUPS].map[y][x] != ' ') tmpLayer.map[y][x] = this.layers[LYR_PICKUPS].map[y][x];
-                    if (this.layers[LYR_ACTORS].map[y][x] != ' ') tmpLayer.map[y][x] = this.layers[LYR_ACTORS].map[y][x];
+                } else if (actors[y][x] != ' ') {
+                    ch = actors[y][x];
 
-                    if (DEBUG) console.log('PA: tmpLayer[%s][%s]: "%s"', y, x, tmpLayer.map[y][x]); 
-                    break;
+                } else {
+                    ch = floors[y][x];
+                }
             }
 
-            buf += tmpLayer.map[y][x];
+            buf += ch;
         }
-
         buf += "\n";
     }
 
-    if (DEBUG) console.groupEnd();
-
-    switch (this.renderMode) {
-        case '2d':
-            result = [ this.layers[LYR_FLOORS].render(), buf ];
-            break;
-
-        default:
-            result = buf;
-    }
-
-    return result;
+    return (this.renderMode === '2d') ? [ this.layers[LYR_FLOORS].render(), buf ] : buf;
 }
 
 // post-processing and final render
@@ -1151,19 +1150,14 @@ Engine.prototype.render = function() {
         if (_$('#B0_0')) {
             for (var y = 0; y < this.height; y++) {
                 for (var x = 0; x < this.width; x++) {
-                    _$('#B' + y + '_' + x).className = "sprite grass";
+                    //_$('#B' + y + '_' + x).className = "sprite grass";
+                    window['B'+y+'_'+x].className = 'sprite grass';
                 }
             }
         }
 
     } else {
         buf = this.mergeLayers();
-    }
-
-    if (DEBUG) {
-        console.groupCollapsed('render');
-        console.log(buf);
-        console.groupEnd();
     }
 
     stage.innerText = buf;
@@ -1304,16 +1298,19 @@ Engine.prototype.dayNightCycle = function(state) {
 }
 
 Engine.prototype.lightFlicker = function() {
+    if (! engine.effects) return;
+
     var v = Math.floor(Math.random() * 128)
       , s = 1.25 + (v/128) * 0.25
-      , next = Math.floor(Math.random() * 65) + 15
+      , next = Math.floor(Math.random() * 200) + 50
     ;
 
     if (s > 1.5) s = 1.5; // clamp scale
     _$('#lightmask').style.transform = 'scale(' + s + ')';
 
     if (engine.storm) 
-        _$('#light').style.backgroundColor = 'rgba(' + v + ', ' + v + ', 0, 0.5)';
+        //_$('#light').style.backgroundColor = 'rgba(' + v + ', ' + v + ', 0, 0.5)';
+        light.style.backgroundColor = 'rgba(' + v + ', ' + v + ', 0, 0.5)';
 
     setTimeout(engine.lightFlicker, next);
 }
@@ -1336,7 +1333,6 @@ function startNewGame(hasStarted) {
       , D: 1
       , A: 10
       , P: 3
-      , debug: false
       , seed: 4242
       , hasStarted: hasStarted
     });

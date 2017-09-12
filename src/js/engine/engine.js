@@ -24,12 +24,12 @@ function Engine(opts) {
     this.renderMode = '2d';
     this.cardDecks = [];
     this.storm = false;
-    this.effects = false;
+    this.effects = (screen.availWidth >= 800); //FIXME: better mobile detection
 
     window.addEventListener('keydown', this.handleInputs);
     this.setSeed(seed);
 
-    // FIXME: REMOVE: use document fragments for performance (reduce reflows, paint calls)
+    // NOTE: this render strategy is much more performant than creating document fragments
     // setup stage2d
     if (!opts.hasStarted) {
         for (var y=0; y<this.height; y++) {
@@ -279,7 +279,7 @@ Engine.prototype.mergeLayers = function() {
                     ch = actors[y][x];
 
                 } else {
-                    ch = '.';
+                    ch = floors[y][x];
                 }
             }
 
@@ -453,7 +453,7 @@ Engine.prototype.dayNightCycle = function(state) {
 }
 
 Engine.prototype.lightFlicker = function() {
-    if (! this.effects) return;
+    if (! engine.effects) return;
 
     var v = Math.floor(Math.random() * 128)
       , s = 1.25 + (v/128) * 0.25
