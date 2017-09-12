@@ -124,6 +124,14 @@ footer {
     transition: top 1s, left 1s;
 }
 
+#bg {
+    position: absolute;
+    width: 1000px;
+    height: 1000px;
+    transition: top 1s, left 1s;
+    background-image: url(../assets/lost-border.png);
+}
+
 #light, #lightmask {
     display: inline-block;
     position: absolute;

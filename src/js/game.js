@@ -870,6 +870,7 @@ function Engine(opts) {
     this.cardDecks = [];
     this.storm = false;
     this.effects = (screen.availWidth >= 800); //FIXME: better mobile detection
+    this.time = 0; // start at noon
 
     window.addEventListener('keydown', this.handleInputs);
     this.setSeed(seed);
@@ -924,20 +925,8 @@ Engine.prototype.setSeed = function(s) {
     this.centerView();
 }
 
-Engine.prototype.teardown = function() {
-    // stub: remove event listeners from layers and things here
-    this.layers = [];
-    this.floors = [];
-    this.walls = [];
-    this.doors = [];
-    this.pickups = [];
-    this.actors = [];
-}
-
 Engine.prototype.generateLayers = function() {
-    if (this.layers.length > 0) {
-        this.teardown();
-    }
+    this.layers = [];
 
     // Create a layer for floors
     this.layers.push(new Layer({ id: LYR_FLOORS, W: this.width, H: this.height, N: -1, T: Floor }));
@@ -1026,15 +1015,23 @@ Engine.prototype.handleInputs = function(e) {
         engine.aiTurn();
         engine.render();
         engine.centerView();
+        engine.clock();
     }
 }
 
 Engine.prototype.centerView = function() {
     // reposition stage
     if (typeof engine != 'undefined' && engine.actors.length > 1) {
-        var stage = _$('#stage2d');
-        stage.style.top =  ((engine.actors[0].y * 20 - 100) * -1) + 'px';
-        stage.style.left = ((engine.actors[0].x * 15 - 150) * -1) + 'px';
+        var stage = _$('#stage2d')
+          , bg = _$('#bg')
+          , x = -1 * (engine.actors[0].x * 15 - 150)
+          , y = -1 * (engine.actors[0].y * 20 - 100)
+        ;
+
+        stage.style.top =  y + 'px';
+        stage.style.left = x + 'px';
+        bg.style.top =  (y-100) + 'px';
+        bg.style.left = (x-150) + 'px';
     }
 }
 
@@ -1164,49 +1161,18 @@ Engine.prototype.render = function() {
 
     if (! _$('#C0_0')) return buf;
 
-    var lines = buf.split(/\n/);
+    var lines = buf.split(/\n/)
+      , classes = { '.':'grass', '#':'tree', '@':'player', 'a':'actor', 'p':'gold', 'd':'stones' }
+    ;
+
     for (var y=0; y<this.height; y++) {
         var line = lines[y]
           , columns = line.split('')
         ;
 
         for (var x=0; x<this.width; x++) {
-            var column = columns[x]
-              , classNames = ''
-              , id = '#'
-            ;
-
-            switch(column) {
-                case '.':
-                    classNames = 'grass';
-                    break;
-
-                case '#':
-                    classNames = 'tree';
-                    break;
-
-                case '@':
-                    classNames = 'player';
-                    break;
-
-                case 'a':
-                    classNames = 'actor';
-                    break;
-
-                case 'p':
-                    classNames = 'gold';
-                    break;
-
-                case 'd':
-                    classNames = 'stones';
-                    break;
-
-                default:
-                    classNames = '';
-            }
-
-            id += 'C' + y + '_' + x;
-            _$(id).className='sprite ' + classNames;
+            var ch = columns[x];
+            _$('#C'+y+'_'+x).className = 'sprite ' + classes[ch];
         }
     }
 
@@ -1289,11 +1255,11 @@ Engine.prototype.dayNightCycle = function(state) {
     //FIXME:                           12PM rgba(127,127,0,0)     12AM rgba(0,0,255,0.7)
     //FIXME: each turn should be ~ 10minutes; 6 turns per hour
     if (state == 'night') {
-        _$('#lightmask').style.opacity = 1;
+        this.time = 108; // 6pm
         this.lightFlicker();
 
     } else {
-        _$('#lightmask').style.opacity = 0;
+        this.time = 36; // 6am
     }
 }
 
@@ -1309,7 +1275,6 @@ Engine.prototype.lightFlicker = function() {
     _$('#lightmask').style.transform = 'scale(' + s + ')';
 
     if (engine.storm) 
-        //_$('#light').style.backgroundColor = 'rgba(' + v + ', ' + v + ', 0, 0.5)';
         light.style.backgroundColor = 'rgba(' + v + ', ' + v + ', 0, 0.5)';
 
     setTimeout(engine.lightFlicker, next);
@@ -1323,6 +1288,41 @@ Engine.prototype.lightning = function() {
         engine.storm = false;
         _$('#light').style.backgroundColor = 'rgba(64,64,0,0.5)';
     }, 1000);
+}
+
+Engine.prototype.clock = function() {
+    var time = this.time += 1;
+
+    if (time > 144)
+        time = 0;
+
+    if (time == 0) {
+        console.warn('noon');
+    }
+
+    if (time == 36) {
+        console.warn('6pm');
+    }
+
+    if (time == 72) {
+        console.warn('midnight');
+    }
+
+    if (time == 108) {
+        console.warn('6am');
+    }
+
+    // darken at dusk, lighten at dawn
+    if (time > 60 && time <= 72)
+        _$('lightmask').style.opacity = 1 - (72-time)/12;    // darken
+
+    else if (time > 96 && time < 108)
+        _$('lightmask').style.opacity = ((108-time)/12); // lighten
+
+    else if (time >= 108)
+        _$('lightmask').style.opacity = 0;
+
+    this.time = time;
 }
 function startNewGame(hasStarted) {
     setSeed(4242);
