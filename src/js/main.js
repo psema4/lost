@@ -12,6 +12,7 @@ function startNewGame(hasStarted) {
     });
 
     engine.render();
+    engine.clock();
     engine.centerView();
 
     if (!!hasStarted) {

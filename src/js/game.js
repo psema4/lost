@@ -1291,7 +1291,9 @@ Engine.prototype.lightning = function() {
 }
 
 Engine.prototype.clock = function() {
-    var time = this.time += 1;
+    var time = this.time += 1
+      , r, g, b
+    ;
 
     if (time > 144)
         time = 0;
@@ -1322,6 +1324,30 @@ Engine.prototype.clock = function() {
     else if (time >= 108)
         _$('lightmask').style.opacity = 0;
 
+    // light color
+    if (time > 36 && time <= 108) {
+        var diff = (time < 72) ? 72-time : time-108
+        r = 64+diff;
+    } else {
+        r = 128;
+    }
+
+    if (time < 36 || time >= 108) {
+        var diff = (time < 36) ? 36-time : time-108;
+        g = 64+(diff*2);
+    } else {
+        g = 0;
+    }
+
+    if (time > 36 && time < 108) {
+        var diff = (time < 72) ? 72-time : time-108;
+        b = 128 - diff * 2;
+    } else {
+        b = 0;
+    }
+
+    _$('#light').style.backgroundColor = 'rgba('+r+','+g+','+b+',0.5)';
+
     this.time = time;
 }
 function startNewGame(hasStarted) {
@@ -1338,6 +1364,7 @@ function startNewGame(hasStarted) {
     });
 
     engine.render();
+    engine.clock();
     engine.centerView();
 
     if (!!hasStarted) {
