@@ -11,9 +11,7 @@ cp src/assets/lost-lightmask.png dist/assets/lost-lightmask.png
 echo "building and copying css files"
 cat src/css/main.css    \
     src/css/sprites.css > src/css/game.css
-cp src/css/game.css src/css/game.min.css
-perl -pi -e's/\n/ /g' src/css/game.min.css
-perl -pi -e's/\s\s\s\s/ /g' src/css/game.min.css
+cleancss -o src/css/game.min.css src/css/game.css
 cp src/css/game.min.css dist/css/game.min.css
 
 echo "building and copying js files"
