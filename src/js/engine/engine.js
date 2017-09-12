@@ -24,10 +24,12 @@ function Engine(opts) {
     this.renderMode = '2d';
     this.cardDecks = [];
     this.storm = false;
+    this.effects = false;
 
     window.addEventListener('keydown', this.handleInputs);
     this.setSeed(seed);
 
+    // FIXME: REMOVE: use document fragments for performance (reduce reflows, paint calls)
     // setup stage2d
     if (!opts.hasStarted) {
         for (var y=0; y<this.height; y++) {
@@ -98,7 +100,7 @@ Engine.prototype.generateLayers = function() {
     this.floors = this.layers[LYR_FLOORS].things;
 
     // Create a layer for walls
-    this.layers.push(new Layer({ id: LYR_WALLS, W: this.width, H: this.height, N: -1, P: 0.15, T: Wall, B: 5 }));
+    this.layers.push(new Layer({ id: LYR_WALLS, W: this.width, H: this.height, N: -1, P: 0.15, T: Wall, B: 1 }));
     this.layers[LYR_WALLS].generate();
     this.walls = this.layers[LYR_WALLS].things;
 
@@ -175,11 +177,10 @@ Engine.prototype.handleInputs = function(e) {
         default:
     }
 
-    engine.centerView();
-
     if (isPlaying) {
-        engine.render(); //called by aiTurn
         engine.aiTurn();
+        engine.render();
+        engine.centerView();
     }
 }
 
@@ -243,8 +244,6 @@ Engine.prototype.aiTurn = function() {
         if (d == 2) actor.move(0, 1);
         if (d == 3) actor.move(1, 0);
     });
-
-    this.render();
 }
 
 // combine layers (raw render)
@@ -454,6 +453,8 @@ Engine.prototype.dayNightCycle = function(state) {
 }
 
 Engine.prototype.lightFlicker = function() {
+    if (! this.effects) return;
+
     var v = Math.floor(Math.random() * 128)
       , s = 1.25 + (v/128) * 0.25
       , next = Math.floor(Math.random() * 200) + 50
