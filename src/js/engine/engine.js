@@ -28,6 +28,7 @@ function Engine(opts) {
     this.clkFlicker;
     this.time = 0; // start at noon
     this.day = 1;
+    this.usingLantern = false;
 
     window.addEventListener('keydown', this.handleInputs);
     this.setSeed(seed);
@@ -407,7 +408,6 @@ Engine.prototype.dayNightCycle = function(state) {
 Engine.prototype.lightFlicker = function() {
     clearTimeout(engine.clkFlicker);
 
-    if (! engine.effects) return;
     if (engine.player.has('lantern') < 0) return; // NEW
 
     var v = Math.floor(Math.random() * 128)
@@ -416,10 +416,14 @@ Engine.prototype.lightFlicker = function() {
     ;
 
     if (s > 1.5) s = 1.5; // clamp scale
-    _$('#lightmask').style.transform = 'scale(' + s + ')';
 
-    if (engine.effects) 
+    if (engine.effects) {
+        _$('#lightmask').style.transform = 'scale(' + s + ')';
         light.style.backgroundColor = 'rgba(' + v + ', ' + v + ', 0, 0.5)';
+
+    } else {
+        light.style.backgroundColor = 'rgba(64, 64, 0, 0.5)';
+    }
 
     engine.clkFlicker = setTimeout(engine.lightFlicker, next);
 }
@@ -464,6 +468,7 @@ Engine.prototype.clock = function() {
     if (time == 108) {
         //console.warn('6am');
         clearTimeout(engine.clkFlicker);
+        engine.usingLantern = false;
         engine.days += 1;
         engine.player.updateGameUI();
         engine.log("It's morning");
@@ -480,28 +485,30 @@ Engine.prototype.clock = function() {
         _$('lightmask').style.opacity = 0;
 
     // light color
-    if (time > 36 && time <= 108) {
-        var diff = (time < 72) ? 72-time : time-108
-        r = 64+diff;
-    } else {
-        r = 128;
-    }
+    if (! engine.usingLantern) {
+        if (time > 36 && time <= 108) {
+            var diff = (time < 72) ? 72-time : time-108
+            r = 64+diff;
+        } else {
+            r = 128;
+        }
 
-    if (time < 36 || time >= 108) {
-        var diff = (time < 36) ? 36-time : time-108;
-        g = 64+(diff*2);
-    } else {
-        g = 0;
-    }
+        if (time < 36 || time >= 108) {
+            var diff = (time < 36) ? 36-time : time-108;
+            g = 64+(diff*2);
+        } else {
+            g = 0;
+        }
 
-    if (time > 36 && time < 108) {
-        var diff = (time < 72) ? 72-time : time-108;
-        b = 128 - diff * 2;
-    } else {
-        b = 0;
-    }
+        if (time > 36 && time < 108) {
+            var diff = (time < 72) ? 72-time : time-108;
+            b = 128 - diff * 2;
+        } else {
+            b = 0;
+        }
 
-    _$('#light').style.backgroundColor = 'rgba('+r+','+g+','+b+',0.5)';
+        _$('#light').style.backgroundColor = 'rgba('+r+','+g+','+b+',0.5)';
+    }
 
     this.time = time;
 }

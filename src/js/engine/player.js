@@ -158,6 +158,7 @@ Player.prototype.use = function(item) {
             case 'lantern':
                 if (engine.time >= 36 && engine.time < 108) {
                     engine.log('You light your lantern');
+                    engine.usingLantern = true;
                     engine.lightFlicker();
 
                 } else {
