@@ -81,6 +81,11 @@ Player.prototype.updateGameUI = function() {
     });
 
     _$('#hp').innerText = this.hp;
+
+    if (typeof engine != 'undefined') {
+        _$('#day').innerText = engine.day;
+        _$('#room').innerText = engine.seed;
+    }
 }
 
 Player.prototype.updateInventoryUI = function() {

@@ -122,6 +122,12 @@ span {
     list-style: none;
 }
 
+#win {
+    display: none;
+    text-align: center;
+    line-height: 50vh;
+}
+
 #died {
     display: none;
     text-align: center;

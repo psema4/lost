@@ -65,7 +65,6 @@ function Engine(opts) {
 
     this.player.updateGameUI();
     this.player.updateInventoryUI();
-    _$('#room').innerText = 0;
 
     // create event cards
     this.cardDecks[DECK_EVENTS] = createEventsDeck(10);
@@ -123,7 +122,7 @@ Engine.prototype.isMode = function(mode) {
 // handle inputs
 Engine.prototype.handleInputs = function(e) {
     var isPlaying = engine.mode === 'game'
-        isMenu = ['mainmenu', 'intro', 'inventory', 'died'].includes(engine.mode)
+        isMenu = ['mainmenu', 'intro', 'inventory', 'win', 'died'].includes(engine.mode)
     ;
 
     switch (e.which) {
@@ -166,6 +165,7 @@ Engine.prototype.handleInputs = function(e) {
         engine.render();
         engine.centerView();
         engine.clock();
+        engine.winCondition();
     }
 }
 
@@ -469,7 +469,7 @@ Engine.prototype.clock = function() {
         //console.warn('6am');
         clearTimeout(engine.clkFlicker);
         engine.usingLantern = false;
-        engine.days += 1;
+        engine.day += 1;
         engine.player.updateGameUI();
         engine.log("It's morning");
     }
@@ -516,4 +516,9 @@ Engine.prototype.clock = function() {
 Engine.prototype.log = function(m) {
     M.value += m + "\n";
     M.scrollTop = M.scrollHeight;
+}
+
+Engine.prototype.winCondition = function() {
+    if (engine.player.has('kardoom') > -1)
+        engine.showScreen('win');
 }

@@ -16,8 +16,13 @@ function Pickup(opts) {
 
 Pickup.prototype.getName = function(id) {
     var names = [ 'Potion', 'Scroll', 'Gold', 'Lantern', 'Axe' ]
-      , selected = prng.getInt(names.length, 1) - 1
+      , selected
     ;
+
+    if (typeof engine != 'undefined')
+        names.push('Kardoom');
+
+    selected = prng.getInt(names.length, 1) - 1
 
     return names[selected];
 }

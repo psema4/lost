@@ -7,13 +7,13 @@ function startNewGame(hasStarted) {
       , D: 1
       , A: 10
       , P: 3
-      , seed: 4242 // FIXME: DEPRECATE
       , hasStarted: hasStarted
     });
 
     engine.render();
     engine.clock();
     engine.centerView();
+    engine.player.updateGameUI();
 
     if (!!hasStarted) {
         engine.showScreen('intro');

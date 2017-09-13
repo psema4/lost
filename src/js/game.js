@@ -221,11 +221,8 @@ Door.prototype.trigger = function() {
 
     // prevent closure from restoring player glyph
     setTimeout(function() {
-        console.log('teleporting from %s to %s', engine.seed, dest);
         engine.setSeed(dest);
-
-        var previousRoom = +_$('#room').innerText
-        _$('#room').innerText = (previousRoom + 1) + ''; 
+        engine.player.updateGameUI();
     }, 0);
 }
 STATE_NORMAL = 0
@@ -246,8 +243,13 @@ function Pickup(opts) {
 
 Pickup.prototype.getName = function(id) {
     var names = [ 'Potion', 'Scroll', 'Gold', 'Lantern', 'Axe' ]
-      , selected = prng.getInt(names.length, 1) - 1
+      , selected
     ;
+
+    if (typeof engine != 'undefined')
+        names.push('Kardoom');
+
+    selected = prng.getInt(names.length, 1) - 1
 
     return names[selected];
 }
@@ -764,6 +766,11 @@ Player.prototype.updateGameUI = function() {
     });
 
     _$('#hp').innerText = this.hp;
+
+    if (typeof engine != 'undefined') {
+        _$('#day').innerText = engine.day;
+        _$('#room').innerText = engine.seed;
+    }
 }
 
 Player.prototype.updateInventoryUI = function() {
@@ -841,6 +848,7 @@ Player.prototype.use = function(item) {
             case 'lantern':
                 if (engine.time >= 36 && engine.time < 108) {
                     engine.log('You light your lantern');
+                    engine.usingLantern = true;
                     engine.lightFlicker();
 
                 } else {
@@ -893,6 +901,7 @@ function Engine(opts) {
     this.clkFlicker;
     this.time = 0; // start at noon
     this.day = 1;
+    this.usingLantern = false;
 
     window.addEventListener('keydown', this.handleInputs);
     this.setSeed(seed);
@@ -929,7 +938,6 @@ function Engine(opts) {
 
     this.player.updateGameUI();
     this.player.updateInventoryUI();
-    _$('#room').innerText = 0;
 
     // create event cards
     this.cardDecks[DECK_EVENTS] = createEventsDeck(10);
@@ -987,7 +995,7 @@ Engine.prototype.isMode = function(mode) {
 // handle inputs
 Engine.prototype.handleInputs = function(e) {
     var isPlaying = engine.mode === 'game'
-        isMenu = ['mainmenu', 'intro', 'inventory', 'died'].includes(engine.mode)
+        isMenu = ['mainmenu', 'intro', 'inventory', 'win', 'died'].includes(engine.mode)
     ;
 
     switch (e.which) {
@@ -1030,6 +1038,7 @@ Engine.prototype.handleInputs = function(e) {
         engine.render();
         engine.centerView();
         engine.clock();
+        engine.winCondition();
     }
 }
 
@@ -1122,14 +1131,14 @@ Engine.prototype.mergeLayers = function() {
                 ch = walls[y][x];
 
             } else {
-                if (doors[y][x] != ' ') {
+                if (actors[y][x] != ' ') {
+                    ch = actors[y][x];
+
+                } else if (doors[y][x] != ' ') {
                     ch = doors[y][x]
 
                 } else if (pickups[y][x] != ' ') {
                     ch = pickups[y][x];
-
-                } else if (actors[y][x] != ' ') {
-                    ch = actors[y][x];
 
                 } else {
                     ch = floors[y][x];
@@ -1272,7 +1281,6 @@ Engine.prototype.dayNightCycle = function(state) {
 Engine.prototype.lightFlicker = function() {
     clearTimeout(engine.clkFlicker);
 
-    if (! engine.effects) return;
     if (engine.player.has('lantern') < 0) return; // NEW
 
     var v = Math.floor(Math.random() * 128)
@@ -1281,10 +1289,14 @@ Engine.prototype.lightFlicker = function() {
     ;
 
     if (s > 1.5) s = 1.5; // clamp scale
-    _$('#lightmask').style.transform = 'scale(' + s + ')';
 
-    if (engine.effects) 
+    if (engine.effects) {
+        _$('#lightmask').style.transform = 'scale(' + s + ')';
         light.style.backgroundColor = 'rgba(' + v + ', ' + v + ', 0, 0.5)';
+
+    } else {
+        light.style.backgroundColor = 'rgba(64, 64, 0, 0.5)';
+    }
 
     engine.clkFlicker = setTimeout(engine.lightFlicker, next);
 }
@@ -1329,7 +1341,8 @@ Engine.prototype.clock = function() {
     if (time == 108) {
         //console.warn('6am');
         clearTimeout(engine.clkFlicker);
-        engine.days += 1;
+        engine.usingLantern = false;
+        engine.day += 1;
         engine.player.updateGameUI();
         engine.log("It's morning");
     }
@@ -1345,28 +1358,30 @@ Engine.prototype.clock = function() {
         _$('lightmask').style.opacity = 0;
 
     // light color
-    if (time > 36 && time <= 108) {
-        var diff = (time < 72) ? 72-time : time-108
-        r = 64+diff;
-    } else {
-        r = 128;
-    }
+    if (! engine.usingLantern) {
+        if (time > 36 && time <= 108) {
+            var diff = (time < 72) ? 72-time : time-108
+            r = 64+diff;
+        } else {
+            r = 128;
+        }
 
-    if (time < 36 || time >= 108) {
-        var diff = (time < 36) ? 36-time : time-108;
-        g = 64+(diff*2);
-    } else {
-        g = 0;
-    }
+        if (time < 36 || time >= 108) {
+            var diff = (time < 36) ? 36-time : time-108;
+            g = 64+(diff*2);
+        } else {
+            g = 0;
+        }
 
-    if (time > 36 && time < 108) {
-        var diff = (time < 72) ? 72-time : time-108;
-        b = 128 - diff * 2;
-    } else {
-        b = 0;
-    }
+        if (time > 36 && time < 108) {
+            var diff = (time < 72) ? 72-time : time-108;
+            b = 128 - diff * 2;
+        } else {
+            b = 0;
+        }
 
-    _$('#light').style.backgroundColor = 'rgba('+r+','+g+','+b+',0.5)';
+        _$('#light').style.backgroundColor = 'rgba('+r+','+g+','+b+',0.5)';
+    }
 
     this.time = time;
 }
@@ -1374,6 +1389,11 @@ Engine.prototype.clock = function() {
 Engine.prototype.log = function(m) {
     M.value += m + "\n";
     M.scrollTop = M.scrollHeight;
+}
+
+Engine.prototype.winCondition = function() {
+    if (engine.player.has('kardoom') > -1)
+        engine.showScreen('win');
 }
 function startNewGame(hasStarted) {
     setSeed(4243);
@@ -1384,13 +1404,13 @@ function startNewGame(hasStarted) {
       , D: 1
       , A: 10
       , P: 3
-      , seed: 4242 // FIXME: DEPRECATE
       , hasStarted: hasStarted
     });
 
     engine.render();
     engine.clock();
     engine.centerView();
+    engine.player.updateGameUI();
 
     if (!!hasStarted) {
         engine.showScreen('intro');

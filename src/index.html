@@ -32,7 +32,7 @@
         <div id=game class=screen>
             <div class=ctr><textarea id=M></textarea></div>
 
-            <div class=ctr>Day: <span id=day>1</span> &nbsp; Room: <span id=room>0</span></div>
+            <div class=ctr>Day: <span id=day>1</span> &nbsp; Area: <span id=room>0</span></div>
 
             <div id=shell>
                 <div id=view>
@@ -58,7 +58,7 @@
 
             <div id=instr class=c>
                 <p>
-                    The Scroll of Karduum has been lost!<br/>
+                    The Scroll of Kardoom has been lost!<br/>
                     Find it in the Great Wood and return it<br/>
                     safely to the King
                 </p>
@@ -98,6 +98,11 @@
                 </ul>
             </div><br/>
             <button onclick="engine.showScreen('game')">Close</button>
+        </div>
+
+        <div id=win class=screen>
+            You found the Lost Scroll of Kardoom!
+            <button onclick="engine.showScreen('mainmenu')">Main Menu</button>
         </div>
 
         <div id=died class=screen>
