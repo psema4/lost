@@ -17,13 +17,13 @@ function createEventsDeck(size) {
     // Equivalent to using a potion
     function potion() {
         engine.player.addHealth(engine.player.hpMax);
-        _$('#message').innerText = 'You feel restored!';
+        engine.log('You feel restored!');
     }
 
     // Same as potion, but only restores a single hit point
     function potion1() {
         engine.player.addHealth(1);
-        _$('#message').innerText = 'You feel refreshed!';
+        engine.log('You feel refreshed!');
     }
 
     // Equivalent to using a scroll
@@ -35,7 +35,7 @@ function createEventsDeck(size) {
                 actor.hit();
             }
         });
-        _$('#message').innerText = 'Magical lightning strike!';
+        engine.log('Magical lightning strike!');
     }
 
     // Similar to scroll, but only affects one actor
@@ -52,7 +52,7 @@ function createEventsDeck(size) {
         if (idx != 0) {
             actor.hit();
             engine.lightning();
-            _$('#message').innerText = 'Lightning Strike!';
+            engine.log('Lightning Strike!');
         }
     }
 
@@ -60,7 +60,7 @@ function createEventsDeck(size) {
     function sick() {
         if (engine.player.hp > 1) {
             engine.player.hit();
-            _$('#message').innerText = 'You don\'t feel well';
+            engine.log('You don\'t feel well');
         }
     }
 

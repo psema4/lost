@@ -51,7 +51,7 @@ Player.prototype.addItem = function(item, quiet) {
         this.inventory.push(item);
 
         if (!quiet)
-            _$('#message').innerText = 'You found a ' + item;
+            engine.log('You found a ' + item);
 
         this.updateGameUI();
         this.updateInventoryUI();
@@ -60,7 +60,7 @@ Player.prototype.addItem = function(item, quiet) {
 
     } else {
         if (!quiet)
-            _$('#message').innerText = "Can't take " + item;
+            engine.log("Can't take " + item);
 
         return false;
     }
@@ -142,7 +142,7 @@ Player.prototype.use = function(item) {
     if (found > -1) {
         switch(item.toLowerCase()) {
             case 'scroll':
-                _$('#message').innerText = 'You use a scroll';
+                engine.log('You use a scroll');
                 engine.actors.forEach(function(actor, idx) {
                     if (idx == 0 || actor == undefined) return;
                     actor.hit(engine.actors[0]);
@@ -151,24 +151,24 @@ Player.prototype.use = function(item) {
                 break;
 
             case 'potion':
-                _$('#message').innerText = 'You drink a potion';
+                engine.log('You drink a potion');
                 this.addHealth(this.hpMax);
                 break;
 
             case 'lantern':
                 if (engine.time >= 36 && engine.time < 108) {
-                    _$('#message').innerText = 'You light your lantern';
+                    engine.log('You light your lantern');
                     engine.lightFlicker();
 
                 } else {
-                    _$('#message').innerText = "It's not dark out";
+                    engine.log("It's not dark out");
                 }
                 remove = false;
                 break;
 
             case 'gold':
             default:
-                _$('#message').innerText = "You can't use " + item + ' right now.';
+                engine.log("You can't use " + item + ' right now.');
                 remove = false;
         }
     }

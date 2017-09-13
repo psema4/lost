@@ -1,79 +1,15 @@
 body {
-    font: 24px Helvetica;
+    font: 3.14vh Helvetica;
     background: #000;
+    color: #aab;
 }
 
-#main {
-    min-height: 400px;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-flow: row;
+span {
+    color :#dde;
 }
- 
-#main > article {
-    margin: 4px;
-    padding: 5px;
+
+.ctr {
     text-align: center;
-    flex: 3 1 50%;
-    order: 2;
-}
-
-#main > nav {
-    margin: 4px;
-    padding: 5px;
-    border: 1px solid #000;
-    border-radius: 7pt;
-    background: #000;
-    color: #eee;
-    text-align: center;
-    flex: 1 6 20%;
-    order: 1;
-}
-  
-#main > aside {
-    margin: 4px;
-    padding: 5px;
-    border: 1px solid #000;
-    border-radius: 7pt;
-    background: #000;
-    color: #eee;
-    flex: 1 6 20%;
-    order: 3;
-
-    position: relative;
-    text-align: center;
-}
- 
-header, footer {
-    display: block;
-    margin: 4px;
-    padding: 5px;
-    min-height: 100px;
-    background: #000;
-    color: #eee;
-    text-align: center;
-}
-
-footer {
-    font-size: 10px;
-}
-
-#game button {
-    display: inline-block;
-    width: 3em;
-    height: 2em;
-}
-
-#stats1, #stats2 {
-    position: absolute;
-    top: 0px;
-    cursor: pointer;
-    text-align: left;
-}
-
-#stats2 {
-    text-align: right;
 }
 
 #assets {
@@ -82,21 +18,18 @@ footer {
 
 #start {
     display: block;
-    color: #eee;
     text-align: center;
     line-height: 100vh;
 }
 
 #mainmenu {
     display: none;
-    color: #eee;
     text-align: center;
     line-height: 50vh;
 }
 
 #intro {
     display: none;
-    color: #eee;
     text-align: center;
     line-height: 50vh;
 }
@@ -105,8 +38,8 @@ footer {
     display: none;
 }
 
-#game tt {
-    display: none;
+#shell {
+    text-align: center;
 }
 
 #view {
@@ -126,8 +59,8 @@ footer {
 
 #bg {
     position: absolute;
-    width: 1000px;
-    height: 1000px;
+    width: 1100px;
+    height: 1100px;
     transition: top 1s, left 1s;
     background-image: url(../assets/lost-border.png);
 }
@@ -152,9 +85,33 @@ footer {
     transition: transform 0.2s;
 }
 
+#M {
+    display: inline-block;
+    width: 300px;
+    height: 5em;
+    overflow: scroll;
+    font: 3.14vh Helvetica;
+    color: #ccc;
+    background-color: transparent;
+    border: 0px;
+}
+
+.split {
+    text-align: center;
+}
+
+.lft {
+    display: inline-block;
+    width: 140px;
+}
+
+.rgt {
+    display: inline-block;
+    width: 140px;
+}
+
 #inventory {
     display: none;
-    color: #eee;
     text-align: center;
 }
 
@@ -166,31 +123,46 @@ footer {
 
 #died {
     display: none;
-    color: #eee;
     text-align: center;
     line-height: 50vh;
 }
 
-#stats2 {
-    right: 0px;
+#instr {
+    margin-top: 3vh;
+    display: block;
+    text-align: center;
 }
 
-button { padding: 0.5em; font-size: 2vh; border: 0px; background-color: #ccc; }
-button:hover, button.highlight { background-color: #fff; }
+#ctls {
+    display: none;
+}
+
+button {
+    border: 0px;
+    background-color: #aaa;
+}
+
+button:hover,
+button.highlight {
+    background-color: #fff;
+}
  
-/* Too narrow to support three columns */
 @media all and (max-width: 640px) {
-    #main, #page {
-        flex-direction: column;
+    #instr {
+        display: none;
     }
 
-    #main > article, #main > nav, #main > aside {
-    /* Return them to document order */
-        order: 0;
+    #ctls {
+        display: block;
     }
-  
-    #main > nav, #main > aside, header, footer {
-        min-height: 50px;
-        max-height: 50px;
+
+    button {
+        margin: 1vh;
+        padding: 1vh;
+        min-width: 40px;
+        font-size: 3vh;
     }
+
+button:hover,
+    
 }

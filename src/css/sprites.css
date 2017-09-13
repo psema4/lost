@@ -1,4 +1,4 @@
-.sprite {
+.SP {
     display: inline-block;
     position: absolute;
     width: 15px;
@@ -6,34 +6,34 @@
     background-image: url(../assets/lost.png);
 }
 
-.grass {
+.GR {
     background-position: 0px 0px;
 }
 
-.stones {
+.ST {
     background-position: -15px 0px;
 }
 
-.tree {
+.TR {
     background-position: 0px -20px;
 }
 
-.player {
+.PL {
     background-position: 0px -40px;
 }
 
-.actor {
+.AC {
     background-position: -15px -40px;
 }
 
-.gold {
+.GO {
     background-position: 0px -60px;
 }
 
-.scroll {
+.SC {
     background-position: -15px -60px;
 }
 
-.potion {
+.PO {
     background-position: -30px -60px;
 }

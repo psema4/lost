@@ -375,10 +375,10 @@ Actor.prototype.move = function(dx, dy, isPlayer) {
 
         if (w == '#') {
             if (engine.player.has('axe') > -1) {
-                _$('#message').innerText = 'Chop Chop';
+                engine.log('Chop Chop');
                 if (ty > 0 && ty < engine.height-1 && tx > 0 && tx < engine.width-1) {
                     if (Math.floor(Math.random() * 8) > 5) {
-                        _$('#message').innerText = 'Timber!';
+                        engine.log('Timber!');
                         engine.layers[LYR_WALLS].map[ty][tx] = ' ';
                         engine.layers[LYR_WALLS].dirty = true;
                         engine.layers[LYR_WALLS].render();
@@ -484,13 +484,13 @@ function createEventsDeck(size) {
     // Equivalent to using a potion
     function potion() {
         engine.player.addHealth(engine.player.hpMax);
-        _$('#message').innerText = 'You feel restored!';
+        engine.log('You feel restored!');
     }
 
     // Same as potion, but only restores a single hit point
     function potion1() {
         engine.player.addHealth(1);
-        _$('#message').innerText = 'You feel refreshed!';
+        engine.log('You feel refreshed!');
     }
 
     // Equivalent to using a scroll
@@ -502,7 +502,7 @@ function createEventsDeck(size) {
                 actor.hit();
             }
         });
-        _$('#message').innerText = 'Magical lightning strike!';
+        engine.log('Magical lightning strike!');
     }
 
     // Similar to scroll, but only affects one actor
@@ -519,7 +519,7 @@ function createEventsDeck(size) {
         if (idx != 0) {
             actor.hit();
             engine.lightning();
-            _$('#message').innerText = 'Lightning Strike!';
+            engine.log('Lightning Strike!');
         }
     }
 
@@ -527,7 +527,7 @@ function createEventsDeck(size) {
     function sick() {
         if (engine.player.hp > 1) {
             engine.player.hit();
-            _$('#message').innerText = 'You don\'t feel well';
+            engine.log('You don\'t feel well');
         }
     }
 
@@ -734,7 +734,7 @@ Player.prototype.addItem = function(item, quiet) {
         this.inventory.push(item);
 
         if (!quiet)
-            _$('#message').innerText = 'You found a ' + item;
+            engine.log('You found a ' + item);
 
         this.updateGameUI();
         this.updateInventoryUI();
@@ -743,7 +743,7 @@ Player.prototype.addItem = function(item, quiet) {
 
     } else {
         if (!quiet)
-            _$('#message').innerText = "Can't take " + item;
+            engine.log("Can't take " + item);
 
         return false;
     }
@@ -825,7 +825,7 @@ Player.prototype.use = function(item) {
     if (found > -1) {
         switch(item.toLowerCase()) {
             case 'scroll':
-                _$('#message').innerText = 'You use a scroll';
+                engine.log('You use a scroll');
                 engine.actors.forEach(function(actor, idx) {
                     if (idx == 0 || actor == undefined) return;
                     actor.hit(engine.actors[0]);
@@ -834,24 +834,24 @@ Player.prototype.use = function(item) {
                 break;
 
             case 'potion':
-                _$('#message').innerText = 'You drink a potion';
+                engine.log('You drink a potion');
                 this.addHealth(this.hpMax);
                 break;
 
             case 'lantern':
                 if (engine.time >= 36 && engine.time < 108) {
-                    _$('#message').innerText = 'You light your lantern';
+                    engine.log('You light your lantern');
                     engine.lightFlicker();
 
                 } else {
-                    _$('#message').innerText = "It's not dark out";
+                    engine.log("It's not dark out");
                 }
                 remove = false;
                 break;
 
             case 'gold':
             default:
-                _$('#message').innerText = "You can't use " + item + ' right now.';
+                engine.log("You can't use " + item + ' right now.');
                 remove = false;
         }
     }
@@ -892,6 +892,7 @@ function Engine(opts) {
     this.effects = (screen.availWidth >= 800); //FIXME: better mobile detection
     this.clkFlicker;
     this.time = 0; // start at noon
+    this.day = 1;
 
     window.addEventListener('keydown', this.handleInputs);
     this.setSeed(seed);
@@ -903,7 +904,7 @@ function Engine(opts) {
             for (var x=0; x<this.width; x++) {
                 sprite = document.createElement('span');
                 sprite.id = 'B' + y + '_' + x;
-                sprite.className = 'sprite';
+                sprite.className = 'SP';
 
                 sprite.style.top = y * 20 + 'px';
                 sprite.style.left = x * 15 + 'px';
@@ -916,7 +917,7 @@ function Engine(opts) {
             for (var x=0; x<this.width; x++) {
                 sprite = document.createElement('span');
                 sprite.id = 'C' + y + '_' + x;
-                sprite.className = 'sprite';
+                sprite.className = 'SP';
 
                 sprite.style.top = y * 20 + 'px';
                 sprite.style.left = x * 15 + 'px';
@@ -988,10 +989,6 @@ Engine.prototype.handleInputs = function(e) {
     var isPlaying = engine.mode === 'game'
         isMenu = ['mainmenu', 'intro', 'inventory', 'died'].includes(engine.mode)
     ;
-
-    if (isPlaying)
-        //_$('#message').innerText = '';
-        message.innerText = '';
 
     switch (e.which) {
         case KEY_W:
@@ -1164,8 +1161,8 @@ Engine.prototype.render = function() {
         if (_$('#B0_0')) {
             for (var y = 0; y < this.height; y++) {
                 for (var x = 0; x < this.width; x++) {
-                    //_$('#B' + y + '_' + x).className = "sprite grass";
-                    window['B'+y+'_'+x].className = 'sprite grass';
+                    //_$('#B' + y + '_' + x).className = "SP grass";
+                    window['B'+y+'_'+x].className = 'SP grass';
                 }
             }
         }
@@ -1179,7 +1176,7 @@ Engine.prototype.render = function() {
     if (! _$('#C0_0')) return buf;
 
     var lines = buf.split(/\n/)
-      , classes = { '.':'grass', '#':'tree', '@':'player', 'a':'actor', 'p':'gold', 'd':'stones' }
+      , classes = { '.':'GR', '#':'TR', '@':'PL', 'a':'AC', 'p':'GO', 'd':'ST' }
     ;
 
     for (var y=0; y<this.height; y++) {
@@ -1189,7 +1186,7 @@ Engine.prototype.render = function() {
 
         for (var x=0; x<this.width; x++) {
             var ch = columns[x];
-            _$('#C'+y+'_'+x).className = 'sprite ' + classes[ch];
+            _$('#C'+y+'_'+x).className = 'SP ' + classes[ch];
         }
     }
 
@@ -1320,11 +1317,14 @@ Engine.prototype.clock = function() {
     if (time == 0) {
         //console.warn('noon');
     }
+*/
 
     if (time == 36) {
         //console.warn('6pm');
+        engine.log("It's going to get dark soon");
     }
 
+/*
     if (time == 72) {
         //console.warn('midnight');
     }
@@ -1332,6 +1332,9 @@ Engine.prototype.clock = function() {
     if (time == 108) {
         //console.warn('6am');
         clearTimeout(engine.clkFlicker);
+        engine.days += 1;
+        engine.player.updateGameUI();
+        engine.log("It's morning");
     }
 
     // darken at dusk, lighten at dawn
@@ -1369,6 +1372,11 @@ Engine.prototype.clock = function() {
     _$('#light').style.backgroundColor = 'rgba('+r+','+g+','+b+',0.5)';
 
     this.time = time;
+}
+
+Engine.prototype.log = function(m) {
+    M.value += m + "\n";
+    M.scrollTop = M.scrollHeight;
 }
 function startNewGame(hasStarted) {
     setSeed(4243);

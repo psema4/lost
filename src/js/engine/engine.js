@@ -27,6 +27,7 @@ function Engine(opts) {
     this.effects = (screen.availWidth >= 800); //FIXME: better mobile detection
     this.clkFlicker;
     this.time = 0; // start at noon
+    this.day = 1;
 
     window.addEventListener('keydown', this.handleInputs);
     this.setSeed(seed);
@@ -38,7 +39,7 @@ function Engine(opts) {
             for (var x=0; x<this.width; x++) {
                 sprite = document.createElement('span');
                 sprite.id = 'B' + y + '_' + x;
-                sprite.className = 'sprite';
+                sprite.className = 'SP';
 
                 sprite.style.top = y * 20 + 'px';
                 sprite.style.left = x * 15 + 'px';
@@ -51,7 +52,7 @@ function Engine(opts) {
             for (var x=0; x<this.width; x++) {
                 sprite = document.createElement('span');
                 sprite.id = 'C' + y + '_' + x;
-                sprite.className = 'sprite';
+                sprite.className = 'SP';
 
                 sprite.style.top = y * 20 + 'px';
                 sprite.style.left = x * 15 + 'px';
@@ -123,10 +124,6 @@ Engine.prototype.handleInputs = function(e) {
     var isPlaying = engine.mode === 'game'
         isMenu = ['mainmenu', 'intro', 'inventory', 'died'].includes(engine.mode)
     ;
-
-    if (isPlaying)
-        //_$('#message').innerText = '';
-        message.innerText = '';
 
     switch (e.which) {
         case KEY_W:
@@ -299,8 +296,8 @@ Engine.prototype.render = function() {
         if (_$('#B0_0')) {
             for (var y = 0; y < this.height; y++) {
                 for (var x = 0; x < this.width; x++) {
-                    //_$('#B' + y + '_' + x).className = "sprite grass";
-                    window['B'+y+'_'+x].className = 'sprite grass';
+                    //_$('#B' + y + '_' + x).className = "SP grass";
+                    window['B'+y+'_'+x].className = 'SP grass';
                 }
             }
         }
@@ -314,7 +311,7 @@ Engine.prototype.render = function() {
     if (! _$('#C0_0')) return buf;
 
     var lines = buf.split(/\n/)
-      , classes = { '.':'grass', '#':'tree', '@':'player', 'a':'actor', 'p':'gold', 'd':'stones' }
+      , classes = { '.':'GR', '#':'TR', '@':'PL', 'a':'AC', 'p':'GO', 'd':'ST' }
     ;
 
     for (var y=0; y<this.height; y++) {
@@ -324,7 +321,7 @@ Engine.prototype.render = function() {
 
         for (var x=0; x<this.width; x++) {
             var ch = columns[x];
-            _$('#C'+y+'_'+x).className = 'sprite ' + classes[ch];
+            _$('#C'+y+'_'+x).className = 'SP ' + classes[ch];
         }
     }
 
@@ -455,11 +452,14 @@ Engine.prototype.clock = function() {
     if (time == 0) {
         //console.warn('noon');
     }
+*/
 
     if (time == 36) {
         //console.warn('6pm');
+        engine.log("It's going to get dark soon");
     }
 
+/*
     if (time == 72) {
         //console.warn('midnight');
     }
@@ -467,6 +467,9 @@ Engine.prototype.clock = function() {
     if (time == 108) {
         //console.warn('6am');
         clearTimeout(engine.clkFlicker);
+        engine.days += 1;
+        engine.player.updateGameUI();
+        engine.log("It's morning");
     }
 
     // darken at dusk, lighten at dawn
@@ -504,4 +507,9 @@ Engine.prototype.clock = function() {
     _$('#light').style.backgroundColor = 'rgba('+r+','+g+','+b+',0.5)';
 
     this.time = time;
+}
+
+Engine.prototype.log = function(m) {
+    M.value += m + "\n";
+    M.scrollTop = M.scrollHeight;
 }

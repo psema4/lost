@@ -113,10 +113,10 @@ Actor.prototype.move = function(dx, dy, isPlayer) {
 
         if (w == '#') {
             if (engine.player.has('axe') > -1) {
-                _$('#message').innerText = 'Chop Chop';
+                engine.log('Chop Chop');
                 if (ty > 0 && ty < engine.height-1 && tx > 0 && tx < engine.width-1) {
                     if (Math.floor(Math.random() * 8) > 5) {
-                        _$('#message').innerText = 'Timber!';
+                        engine.log('Timber!');
                         engine.layers[LYR_WALLS].map[ty][tx] = ' ';
                         engine.layers[LYR_WALLS].dirty = true;
                         engine.layers[LYR_WALLS].render();
