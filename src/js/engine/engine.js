@@ -172,15 +172,12 @@ Engine.prototype.centerView = function() {
     // reposition stage
     if (typeof engine != 'undefined' && engine.actors.length > 1) {
         var stage = _$('#stage2d')
-          , bg = _$('#bg')
           , x = -1 * (engine.actors[0].x * 15 - 150)
           , y = -1 * (engine.actors[0].y * 20 - 100)
         ;
 
         stage.style.top =  y + 'px';
         stage.style.left = x + 'px';
-        bg.style.top =  (y-100) + 'px';
-        bg.style.left = (x-150) + 'px';
     }
 }
 

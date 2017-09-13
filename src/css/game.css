@@ -57,14 +57,6 @@ span {
     transition: top 1s, left 1s;
 }
 
-#bg {
-    position: absolute;
-    width: 1100px;
-    height: 1100px;
-    transition: top 1s, left 1s;
-    background-image: url(../assets/lost-border.png);
-}
-
 #light, #lightmask {
     display: inline-block;
     position: absolute;
@@ -115,9 +107,18 @@ span {
     text-align: center;
 }
 
+.list {
+    display: inline-block;
+    width: 300px;
+}
+
+.list button {
+    width: 100px;
+}
+
 #inventory ul {
     text-align: left;
-    margin-left: 33%;
+    margin-left: 15%;
     list-style: none;
 }
 

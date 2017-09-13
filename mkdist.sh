@@ -5,7 +5,7 @@ cp src/index.min.html dist/index.html
 
 echo "copying asset files"
 cp src/assets/lost.png dist/assets/lost.png
-cp src/assets/lost-border.png dist/assets/lost-border.png
+#cp src/assets/lost-border.png dist/assets/lost-border.png
 cp src/assets/lost-lightmask.png dist/assets/lost-lightmask.png
 
 #FIXME: use a css minifier
