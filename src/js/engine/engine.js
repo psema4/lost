@@ -257,14 +257,14 @@ Engine.prototype.mergeLayers = function() {
                 ch = walls[y][x];
 
             } else {
-                if (doors[y][x] != ' ') {
+                if (actors[y][x] != ' ') {
+                    ch = actors[y][x];
+
+                } else if (doors[y][x] != ' ') {
                     ch = doors[y][x]
 
                 } else if (pickups[y][x] != ' ') {
                     ch = pickups[y][x];
-
-                } else if (actors[y][x] != ' ') {
-                    ch = actors[y][x];
 
                 } else {
                     ch = floors[y][x];
