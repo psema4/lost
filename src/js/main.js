@@ -1,5 +1,5 @@
 function startNewGame(hasStarted) {
-    setSeed(4242);
+    setSeed(4243);
 
     window.engine = new Engine({
         W: 50
@@ -7,7 +7,7 @@ function startNewGame(hasStarted) {
       , D: 1
       , A: 10
       , P: 3
-      , seed: 4242
+      , seed: 4242 // FIXME: DEPRECATE
       , hasStarted: hasStarted
     });
 

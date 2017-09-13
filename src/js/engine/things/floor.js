@@ -10,7 +10,7 @@ function Floor(opts) {
     this.x = opts.x || 0;
     this.y = opts.y || 0;
     this.state = opts.state || STATE_NORMAL;
-    this.eventCell = prng.random() < 0.125;
+    this.eventCell = prng.random() < 0.105;
     this.hasFired = false;
 
     return this;

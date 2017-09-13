@@ -154,7 +154,7 @@ function Floor(opts) {
     this.x = opts.x || 0;
     this.y = opts.y || 0;
     this.state = opts.state || STATE_NORMAL;
-    this.eventCell = prng.random() < 0.125;
+    this.eventCell = prng.random() < 0.105;
     this.hasFired = false;
 
     return this;
@@ -245,20 +245,9 @@ function Pickup(opts) {
 }
 
 Pickup.prototype.getName = function(id) {
-    var names = [ 'Potion', 'Scroll', 'Gold' ]
-      , chance = prng.getInt(100, 1) - 1
-      , selected
+    var names = [ 'Potion', 'Scroll', 'Gold', 'Lantern', 'Axe' ]
+      , selected = prng.getInt(names.length, 1) - 1
     ;
-
-    if (chance < 35) {
-        selected = 0;
-
-    } else if (chance < 70) {
-        selected = 1;
-
-    } else {
-        selected = 2;
-    }
 
     return names[selected];
 }
@@ -384,6 +373,20 @@ Actor.prototype.move = function(dx, dy, isPlayer) {
             return true; // prevent move
         }
 
+        if (w == '#') {
+            if (engine.player.has('axe') > -1) {
+                _$('#message').innerText = 'Chop Chop';
+                if (ty > 0 && ty < engine.height-1 && tx > 0 && tx < engine.width-1) {
+                    if (Math.floor(Math.random() * 8) > 5) {
+                        _$('#message').innerText = 'Timber!';
+                        engine.layers[LYR_WALLS].map[ty][tx] = ' ';
+                        engine.layers[LYR_WALLS].dirty = true;
+                        engine.layers[LYR_WALLS].render();
+                    }
+                }
+            }
+        }
+
     } else {
         if (a == '@') {
             engine.player.hit(this);
@@ -474,9 +477,7 @@ function createEventsDeck(size) {
           , { id: 6, name: 'Sick', cb: sick }
           , { id: 7, name: 'Sick', cb: sick }
           , { id: 8, name: 'Daytime', cb: daytime }
-          , { id: 9, name: 'Daytime', cb: daytime }
-          , { id: 10, name: 'Nighttime', cb: nighttime }
-          , { id: 11, name: 'Nighttime', cb: nighttime }
+          , { id: 9, name: 'Nighttime', cb: nighttime }
         ]
     ;
 
@@ -695,8 +696,6 @@ function Player(opts) {
 }
 
 Player.prototype.hit = function(other) {
-    console.log('actor %s hit player', other && other.id);
-
     this.hp -= 1;
 
     if (this.hp <= 0) {
@@ -709,8 +708,8 @@ Player.prototype.hit = function(other) {
 
 Player.prototype.canTake = function(item) {
     var matches = []
-      , maxTarget = 'max_' + item.toLowerCase()
-      , max = this[maxTarget]
+      , maxTarget = item && 'max_' + item.toLowerCase()
+      , max = this[maxTarget] || 1
     ;
 
     matches = this.inventory.filter(function(invItem) {
@@ -806,7 +805,7 @@ Player.prototype.die = function() {
     engine.showScreen('died');
 }
 
-Player.prototype.use = function(item) {
+Player.prototype.has = function(item) {
     var found = -1;
 
     this.inventory.forEach(function(invItem, idx) {
@@ -815,11 +814,18 @@ Player.prototype.use = function(item) {
         }
     });
 
+    return found;
+}
+
+Player.prototype.use = function(item) {
+    var found = this.has(item)
+      , remove = true;
+    ;
+
     if (found > -1) {
-        var item = this.inventory.splice(found, 1)[0];
         switch(item.toLowerCase()) {
             case 'scroll':
-                _$('#message').innerText = 'You use a ' + item;
+                _$('#message').innerText = 'You use a scroll';
                 engine.actors.forEach(function(actor, idx) {
                     if (idx == 0 || actor == undefined) return;
                     actor.hit(engine.actors[0]);
@@ -828,16 +834,30 @@ Player.prototype.use = function(item) {
                 break;
 
             case 'potion':
-                _$('#message').innerText = 'You drink a ' + item;
+                _$('#message').innerText = 'You drink a potion';
                 this.addHealth(this.hpMax);
+                break;
+
+            case 'lantern':
+                if (engine.time >= 36 && engine.time < 108) {
+                    _$('#message').innerText = 'You light your lantern';
+                    engine.lightFlicker();
+
+                } else {
+                    _$('#message').innerText = "It's not dark out";
+                }
+                remove = false;
                 break;
 
             case 'gold':
             default:
                 _$('#message').innerText = "You can't use " + item + ' right now.';
-                this.addItem(item, true); // prevent default message
+                remove = false;
         }
     }
+
+    if (remove)
+        this.inventory.splice(found, 1)[0];
 
     this.updateGameUI();
     this.updateInventoryUI();
@@ -870,6 +890,7 @@ function Engine(opts) {
     this.cardDecks = [];
     this.storm = false;
     this.effects = (screen.availWidth >= 800); //FIXME: better mobile detection
+    this.clkFlicker;
     this.time = 0; // start at noon
 
     window.addEventListener('keydown', this.handleInputs);
@@ -997,10 +1018,6 @@ Engine.prototype.handleInputs = function(e) {
         case KEY_RIGHT:
             if (isPlaying) engine.actors[0].move(1, 0, true);
             if (isMenu) engine.selectNext();
-            break;
-
-        case KEY_SPACE:
-            //if (isPlaying) engine.showScreen('pause');
             break;
 
         case KEY_ENTER:
@@ -1246,25 +1263,23 @@ Engine.prototype.getDiscards = function(deck) {
 }
 
 Engine.prototype.dayNightCycle = function(state) {
-    // toggle if desired state not specified
-    if (!state)
-        state = _$('#lightmask').style.opacity < 1 ? 'night' : 'day';
+    if (!state) // toggle if desired state not specified
+        state = (this.time < 36 || this.time > 108) ? 'night' : 'day';
 
-    //FIXME: handle time passing; fade lightmask opacity between sundown and sunup
-    //FIXME: also set light colour:    6AM rgba(127,63,0,0.5)      6PM rgba(127,63,0,0.5)
-    //FIXME:                           12PM rgba(127,127,0,0)     12AM rgba(0,0,255,0.7)
-    //FIXME: each turn should be ~ 10minutes; 6 turns per hour
     if (state == 'night') {
-        this.time = 108; // 6pm
+        this.time = 36; // 6pm
         this.lightFlicker();
 
     } else {
-        this.time = 36; // 6am
+        this.time = 108; // 6am
     }
 }
 
 Engine.prototype.lightFlicker = function() {
+    clearTimeout(engine.clkFlicker);
+
     if (! engine.effects) return;
+    if (engine.player.has('lantern') < 0) return; // NEW
 
     var v = Math.floor(Math.random() * 128)
       , s = 1.25 + (v/128) * 0.25
@@ -1274,20 +1289,24 @@ Engine.prototype.lightFlicker = function() {
     if (s > 1.5) s = 1.5; // clamp scale
     _$('#lightmask').style.transform = 'scale(' + s + ')';
 
-    if (engine.storm) 
+    if (engine.effects) 
         light.style.backgroundColor = 'rgba(' + v + ', ' + v + ', 0, 0.5)';
 
-    setTimeout(engine.lightFlicker, next);
+    engine.clkFlicker = setTimeout(engine.lightFlicker, next);
 }
 
 Engine.prototype.lightning = function() {
-    engine.storm = true;
+    if (!engine.effects)
+        return;
+
     engine.lightFlicker();
 
-    setTimeout(function() {
-        engine.storm = false;
-        _$('#light').style.backgroundColor = 'rgba(64,64,0,0.5)';
-    }, 1000);
+    if (engine.time < 36 || engine.time >= 108) {
+        setTimeout(function() {
+            clearTimeout(engine.clkFlicker);
+            _$('#light').style.backgroundColor = 'rgba(64,64,0,0.5)';
+        }, 1000);
+    }
 }
 
 Engine.prototype.clock = function() {
@@ -1297,21 +1316,22 @@ Engine.prototype.clock = function() {
 
     if (time > 144)
         time = 0;
-
+/*
     if (time == 0) {
-        console.warn('noon');
+        //console.warn('noon');
     }
 
     if (time == 36) {
-        console.warn('6pm');
+        //console.warn('6pm');
     }
 
     if (time == 72) {
-        console.warn('midnight');
+        //console.warn('midnight');
     }
-
+*/
     if (time == 108) {
-        console.warn('6am');
+        //console.warn('6am');
+        clearTimeout(engine.clkFlicker);
     }
 
     // darken at dusk, lighten at dawn
@@ -1351,7 +1371,7 @@ Engine.prototype.clock = function() {
     this.time = time;
 }
 function startNewGame(hasStarted) {
-    setSeed(4242);
+    setSeed(4243);
 
     window.engine = new Engine({
         W: 50
@@ -1359,7 +1379,7 @@ function startNewGame(hasStarted) {
       , D: 1
       , A: 10
       , P: 3
-      , seed: 4242
+      , seed: 4242 // FIXME: DEPRECATE
       , hasStarted: hasStarted
     });
 

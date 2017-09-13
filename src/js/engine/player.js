@@ -13,8 +13,6 @@ function Player(opts) {
 }
 
 Player.prototype.hit = function(other) {
-    console.log('actor %s hit player', other && other.id);
-
     this.hp -= 1;
 
     if (this.hp <= 0) {
@@ -27,8 +25,8 @@ Player.prototype.hit = function(other) {
 
 Player.prototype.canTake = function(item) {
     var matches = []
-      , maxTarget = 'max_' + item.toLowerCase()
-      , max = this[maxTarget]
+      , maxTarget = item && 'max_' + item.toLowerCase()
+      , max = this[maxTarget] || 1
     ;
 
     matches = this.inventory.filter(function(invItem) {
@@ -124,7 +122,7 @@ Player.prototype.die = function() {
     engine.showScreen('died');
 }
 
-Player.prototype.use = function(item) {
+Player.prototype.has = function(item) {
     var found = -1;
 
     this.inventory.forEach(function(invItem, idx) {
@@ -133,11 +131,18 @@ Player.prototype.use = function(item) {
         }
     });
 
+    return found;
+}
+
+Player.prototype.use = function(item) {
+    var found = this.has(item)
+      , remove = true;
+    ;
+
     if (found > -1) {
-        var item = this.inventory.splice(found, 1)[0];
         switch(item.toLowerCase()) {
             case 'scroll':
-                _$('#message').innerText = 'You use a ' + item;
+                _$('#message').innerText = 'You use a scroll';
                 engine.actors.forEach(function(actor, idx) {
                     if (idx == 0 || actor == undefined) return;
                     actor.hit(engine.actors[0]);
@@ -146,16 +151,30 @@ Player.prototype.use = function(item) {
                 break;
 
             case 'potion':
-                _$('#message').innerText = 'You drink a ' + item;
+                _$('#message').innerText = 'You drink a potion';
                 this.addHealth(this.hpMax);
+                break;
+
+            case 'lantern':
+                if (engine.time >= 36 && engine.time < 108) {
+                    _$('#message').innerText = 'You light your lantern';
+                    engine.lightFlicker();
+
+                } else {
+                    _$('#message').innerText = "It's not dark out";
+                }
+                remove = false;
                 break;
 
             case 'gold':
             default:
                 _$('#message').innerText = "You can't use " + item + ' right now.';
-                this.addItem(item, true); // prevent default message
+                remove = false;
         }
     }
+
+    if (remove)
+        this.inventory.splice(found, 1)[0];
 
     this.updateGameUI();
     this.updateInventoryUI();

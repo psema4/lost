@@ -10,9 +10,7 @@ function createEventsDeck(size) {
           , { id: 6, name: 'Sick', cb: sick }
           , { id: 7, name: 'Sick', cb: sick }
           , { id: 8, name: 'Daytime', cb: daytime }
-          , { id: 9, name: 'Daytime', cb: daytime }
-          , { id: 10, name: 'Nighttime', cb: nighttime }
-          , { id: 11, name: 'Nighttime', cb: nighttime }
+          , { id: 9, name: 'Nighttime', cb: nighttime }
         ]
     ;
 

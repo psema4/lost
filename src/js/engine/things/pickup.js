@@ -15,20 +15,9 @@ function Pickup(opts) {
 }
 
 Pickup.prototype.getName = function(id) {
-    var names = [ 'Potion', 'Scroll', 'Gold' ]
-      , chance = prng.getInt(100, 1) - 1
-      , selected
+    var names = [ 'Potion', 'Scroll', 'Gold', 'Lantern', 'Axe' ]
+      , selected = prng.getInt(names.length, 1) - 1
     ;
-
-    if (chance < 35) {
-        selected = 0;
-
-    } else if (chance < 70) {
-        selected = 1;
-
-    } else {
-        selected = 2;
-    }
 
     return names[selected];
 }

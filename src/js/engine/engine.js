@@ -25,6 +25,7 @@ function Engine(opts) {
     this.cardDecks = [];
     this.storm = false;
     this.effects = (screen.availWidth >= 800); //FIXME: better mobile detection
+    this.clkFlicker;
     this.time = 0; // start at noon
 
     window.addEventListener('keydown', this.handleInputs);
@@ -152,10 +153,6 @@ Engine.prototype.handleInputs = function(e) {
         case KEY_RIGHT:
             if (isPlaying) engine.actors[0].move(1, 0, true);
             if (isMenu) engine.selectNext();
-            break;
-
-        case KEY_SPACE:
-            //if (isPlaying) engine.showScreen('pause');
             break;
 
         case KEY_ENTER:
@@ -401,25 +398,23 @@ Engine.prototype.getDiscards = function(deck) {
 }
 
 Engine.prototype.dayNightCycle = function(state) {
-    // toggle if desired state not specified
-    if (!state)
-        state = _$('#lightmask').style.opacity < 1 ? 'night' : 'day';
+    if (!state) // toggle if desired state not specified
+        state = (this.time < 36 || this.time > 108) ? 'night' : 'day';
 
-    //FIXME: handle time passing; fade lightmask opacity between sundown and sunup
-    //FIXME: also set light colour:    6AM rgba(127,63,0,0.5)      6PM rgba(127,63,0,0.5)
-    //FIXME:                           12PM rgba(127,127,0,0)     12AM rgba(0,0,255,0.7)
-    //FIXME: each turn should be ~ 10minutes; 6 turns per hour
     if (state == 'night') {
-        this.time = 108; // 6pm
+        this.time = 36; // 6pm
         this.lightFlicker();
 
     } else {
-        this.time = 36; // 6am
+        this.time = 108; // 6am
     }
 }
 
 Engine.prototype.lightFlicker = function() {
+    clearTimeout(engine.clkFlicker);
+
     if (! engine.effects) return;
+    if (engine.player.has('lantern') < 0) return; // NEW
 
     var v = Math.floor(Math.random() * 128)
       , s = 1.25 + (v/128) * 0.25
@@ -429,20 +424,24 @@ Engine.prototype.lightFlicker = function() {
     if (s > 1.5) s = 1.5; // clamp scale
     _$('#lightmask').style.transform = 'scale(' + s + ')';
 
-    if (engine.storm) 
+    if (engine.effects) 
         light.style.backgroundColor = 'rgba(' + v + ', ' + v + ', 0, 0.5)';
 
-    setTimeout(engine.lightFlicker, next);
+    engine.clkFlicker = setTimeout(engine.lightFlicker, next);
 }
 
 Engine.prototype.lightning = function() {
-    engine.storm = true;
+    if (!engine.effects)
+        return;
+
     engine.lightFlicker();
 
-    setTimeout(function() {
-        engine.storm = false;
-        _$('#light').style.backgroundColor = 'rgba(64,64,0,0.5)';
-    }, 1000);
+    if (engine.time < 36 || engine.time >= 108) {
+        setTimeout(function() {
+            clearTimeout(engine.clkFlicker);
+            _$('#light').style.backgroundColor = 'rgba(64,64,0,0.5)';
+        }, 1000);
+    }
 }
 
 Engine.prototype.clock = function() {
@@ -452,21 +451,22 @@ Engine.prototype.clock = function() {
 
     if (time > 144)
         time = 0;
-
+/*
     if (time == 0) {
-        console.warn('noon');
+        //console.warn('noon');
     }
 
     if (time == 36) {
-        console.warn('6pm');
+        //console.warn('6pm');
     }
 
     if (time == 72) {
-        console.warn('midnight');
+        //console.warn('midnight');
     }
-
+*/
     if (time == 108) {
-        console.warn('6am');
+        //console.warn('6am');
+        clearTimeout(engine.clkFlicker);
     }
 
     // darken at dusk, lighten at dawn
