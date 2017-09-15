@@ -246,7 +246,7 @@ Pickup.prototype.getName = function(id) {
       , selected
     ;
 
-    if (typeof engine != 'undefined')
+    if (typeof engine != 'undefined' && engine.day > 5)
         names.push('Kardoom');
 
     selected = prng.getInt(names.length, 1) - 1
@@ -857,6 +857,10 @@ Player.prototype.use = function(item) {
                 remove = false;
                 break;
 
+            case 'kardoom':
+                engine.showScreen('win');
+                break;
+
             case 'gold':
             default:
                 engine.log("You can't use " + item + ' right now.');
@@ -1392,8 +1396,9 @@ Engine.prototype.log = function(m) {
 }
 
 Engine.prototype.winCondition = function() {
-    if (engine.player.has('kardoom') > -1)
-        engine.showScreen('win');
+    if (engine.player.has('kardoom') > -1) {
+        engine.player.use('kardoom');
+    }
 }
 function startNewGame(hasStarted) {
     setSeed(4243);

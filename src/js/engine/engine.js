@@ -519,6 +519,7 @@ Engine.prototype.log = function(m) {
 }
 
 Engine.prototype.winCondition = function() {
-    if (engine.player.has('kardoom') > -1)
-        engine.showScreen('win');
+    if (engine.player.has('kardoom') > -1) {
+        engine.player.use('kardoom');
+    }
 }

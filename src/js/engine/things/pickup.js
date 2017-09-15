@@ -19,7 +19,7 @@ Pickup.prototype.getName = function(id) {
       , selected
     ;
 
-    if (typeof engine != 'undefined')
+    if (typeof engine != 'undefined' && engine.day > 5)
         names.push('Kardoom');
 
     selected = prng.getInt(names.length, 1) - 1

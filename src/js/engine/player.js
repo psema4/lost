@@ -172,6 +172,10 @@ Player.prototype.use = function(item) {
                 remove = false;
                 break;
 
+            case 'kardoom':
+                engine.showScreen('win');
+                break;
+
             case 'gold':
             default:
                 engine.log("You can't use " + item + ' right now.');
